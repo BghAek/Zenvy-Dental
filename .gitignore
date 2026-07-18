@@ -4,6 +4,7 @@ build/
 .next/
 out/
 coverage/
+apps/api/src/generated/
 next-env.d.ts
 *.tsbuildinfo
 *.log

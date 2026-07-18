@@ -27,4 +27,4 @@ Agent rulebooks: [CLAUDE.md](CLAUDE.md) (Claude Code) · [AGENTS.md](AGENTS.md) 
 
 ## Status
 
-Sprint 0 in progress — monorepo scaffold (S0-1) and local Docker stack (S0-2) merged; CI in PR (S0-3). See [11-sprint-plan](docs/11-sprint-plan.md) for live task status.
+Sprint 0 in progress — monorepo scaffold (S0-1), local Docker stack (S0-2) and CI (S0-3) merged; Prisma schema v1 (S0-4) in PR. See [11-sprint-plan](docs/11-sprint-plan.md) for live task status.

@@ -3,7 +3,14 @@ import prettier from 'eslint-config-prettier';
 
 export default tseslint.config(
   {
-    ignores: ['**/dist/**', '**/.next/**', '**/out/**', '**/node_modules/**', '**/next-env.d.ts'],
+    ignores: [
+      '**/dist/**',
+      '**/.next/**',
+      '**/out/**',
+      '**/node_modules/**',
+      '**/next-env.d.ts',
+      '**/src/generated/**',
+    ],
   },
   ...tseslint.configs.recommended,
   prettier,

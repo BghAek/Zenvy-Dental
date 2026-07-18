@@ -51,7 +51,11 @@ pnpm --filter @zenvy/landing dev        # landing (Next.js)
 
 ## Database
 
-Postgres is Neon (external, serverless) — no local container (01-architecture §Environments). Put your Neon dev-branch URL in `DATABASE_URL`. From S0-4: `pnpm --filter @zenvy/api prisma migrate dev`.
+Postgres is Neon (external, serverless) — no local container (01-architecture §Environments). Put your Neon dev-branch URL in `DATABASE_URL` (repo-root `.env`; the Prisma CLI reads it via `apps/api/prisma.config.ts`).
+
+- Apply schema/migrations: `pnpm --filter @zenvy/api prisma migrate dev`
+- Regenerate the client (output is gitignored at `apps/api/src/generated/prisma`): `pnpm --filter @zenvy/api prisma generate`
+- Seed (SUPER_ADMIN + demo clinic « Cabinet Dentaire Lumière », idempotent): `pnpm --filter @zenvy/api prisma db seed`
 
 ## Troubleshooting
 
@@ -59,3 +63,4 @@ Postgres is Neon (external, serverless) — no local container (01-architecture 
 - Port already in use → stop the conflicting process or edit the host-side port in `docker-compose.yml`.
 - API code changes not visible in Docker → rebuild: `docker compose up --build api`.
 - Compose fails on missing `.env` → `cp .env.example .env`.
+- `migrate dev` fails with a shadow-database error on Neon → the role can't create databases; point `PRISMA_SHADOW_DATABASE_URL`-style config at a second Neon branch, or run migrations against a throwaway local Postgres container.

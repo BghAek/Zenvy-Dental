@@ -1,0 +1,376 @@
+// ZenvyDental schema v1 — entities and invariants defined in docs/02-database.md.
+// Tenancy: every tenant-scoped model carries clinicId; isolation is enforced by
+// the central Prisma client extension + guards (S0-5), never per-endpoint.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------- Enums (mirrored 1:1 in packages/shared from S0-6) ----------
+
+enum Role {
+  SUPER_ADMIN
+  CLINIC_OWNER
+  CLINIC_STAFF
+}
+
+enum ClinicOnboardingStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum PatientSource {
+  MANUAL
+  WHATSAPP_INBOUND
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  CONFIRMED
+  CANCELLED
+  NO_SHOW
+  DONE
+}
+
+enum ConversationStatus {
+  AI
+  HUMAN
+  CLOSED
+}
+
+enum MessageDirection {
+  IN
+  OUT
+}
+
+enum MessageAuthor {
+  PATIENT
+  AI
+  STAFF
+  SYSTEM
+}
+
+enum MessageDeliveryStatus {
+  PENDING
+  SENT
+  DELIVERED
+  READ
+  FAILED
+}
+
+enum Plan {
+  PREMIUM
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+}
+
+enum ScheduledMessageKind {
+  REMINDER_24H
+  REMINDER_2H
+  FOLLOWUP
+  CUSTOM
+}
+
+enum ScheduledMessageStatus {
+  PENDING
+  SENT
+  CANCELLED
+  FAILED
+}
+
+enum OnboardingRequestStatus {
+  PENDING
+  CALL_SCHEDULED
+  DONE
+  CANCELLED
+}
+
+enum SupportThreadStatus {
+  OPEN
+  CLOSED
+}
+
+enum ErrorSeverity {
+  INFO
+  WARN
+  ERROR
+  FATAL
+}
+
+// ---------- Models ----------
+
+model Clinic {
+  id               String                 @id @default(cuid())
+  name             String
+  slug             String                 @unique
+  phone            String?
+  address          String?
+  timezone         String                 @default("Europe/Paris")
+  locale           String                 @default("fr-FR")
+  // AI assistant config: tone, services, prices, hours, out-of-office.
+  // Free-form until the AI-config contract lands (S3-4).
+  aiConfig         Json?
+  onboardingStatus ClinicOnboardingStatus @default(PENDING)
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+
+  users              User[]
+  patients           Patient[]
+  appointments       Appointment[]
+  conversations      Conversation[]
+  messages           Message[]
+  whatsAppAccounts   WhatsAppAccount[]
+  subscription       Subscription?
+  scheduledMessages  ScheduledMessage[]
+  onboardingRequests OnboardingRequest[]
+  supportThreads     SupportThread[]
+  errorLogs          ErrorLog[]
+  auditLogs          AuditLog[]
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  role      Role
+  // Nullable only for SUPER_ADMIN (docs/02-database.md).
+  clinicId  String?
+  clinic    Clinic?  @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  supportMessages SupportMessage[]
+  errorLogs       ErrorLog[]
+  auditLogs       AuditLog[]
+
+  @@index([clinicId])
+}
+
+model Patient {
+  id        String        @id @default(cuid())
+  clinicId  String
+  clinic    Clinic        @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  firstName String
+  lastName  String
+  // E.164 (+33612345678); normalized and validated with Zod in packages/shared.
+  phone     String
+  tags      String[]      @default([])
+  notes     String?
+  source    PatientSource @default(MANUAL)
+  optOut    Boolean       @default(false)
+  // Soft delete — clinics expect undo (docs/02-database.md).
+  deletedAt DateTime?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  appointments      Appointment[]
+  conversations     Conversation[]
+  scheduledMessages ScheduledMessage[]
+
+  // Full unique index — a soft-deleted row still occupies the (clinicId, phone)
+  // slot. Patient create paths must restore the soft-deleted row instead of
+  // inserting (S1-3); Prisma cannot express a partial index here.
+  @@unique([clinicId, phone])
+}
+
+model Appointment {
+  id          String            @id @default(cuid())
+  clinicId    String
+  clinic      Clinic            @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  patientId   String
+  patient     Patient           @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  startsAt    DateTime
+  durationMin Int
+  type        String
+  status      AppointmentStatus @default(SCHEDULED)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  // Reminder state lives on ScheduledMessage rows (one per reminder, with status).
+  scheduledMessages ScheduledMessage[]
+
+  @@index([clinicId])
+  @@index([patientId])
+}
+
+model Conversation {
+  id             String             @id @default(cuid())
+  clinicId       String
+  clinic         Clinic             @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  // Nullable until the WhatsApp contact is matched to a patient.
+  patientId      String?
+  patient        Patient?           @relation(fields: [patientId], references: [id], onDelete: SetNull)
+  waContactPhone String
+  status         ConversationStatus @default(AI)
+  urgentFlag     Boolean            @default(false)
+  lastMessageAt  DateTime?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  messages Message[]
+
+  @@index([clinicId, lastMessageAt])
+  @@index([patientId])
+}
+
+model Message {
+  id             String                 @id @default(cuid())
+  clinicId       String
+  clinic         Clinic                 @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  conversationId String
+  conversation   Conversation           @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  direction      MessageDirection
+  author         MessageAuthor
+  body           String
+  waMessageId    String?                @unique
+  templateName   String?
+  // Null for inbound messages; tracked for outbound only.
+  deliveryStatus MessageDeliveryStatus?
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+
+  @@index([clinicId])
+  @@index([conversationId])
+}
+
+model WhatsAppAccount {
+  id             String   @id @default(cuid())
+  clinicId       String
+  clinic         Clinic   @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  // Globally unique — the tenant-routing key for inbound webhooks.
+  phoneNumberId  String   @unique
+  wabaId         String
+  displayNumber  String
+  verified       Boolean  @default(false)
+  // Encrypted at the application layer before persisting (docs/04-security.md).
+  accessTokenEnc String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([clinicId])
+}
+
+model Subscription {
+  id                   String             @id @default(cuid())
+  clinicId             String             @unique
+  clinic               Clinic             @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  stripeCustomerId     String?            @unique
+  stripeSubscriptionId String?            @unique
+  plan                 Plan               @default(PREMIUM)
+  status               SubscriptionStatus @default(TRIALING)
+  trialEndsAt          DateTime?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+}
+
+model ScheduledMessage {
+  id            String                 @id @default(cuid())
+  clinicId      String
+  clinic        Clinic                 @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  patientId     String
+  patient       Patient                @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  appointmentId String?
+  appointment   Appointment?           @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  kind          ScheduledMessageKind
+  templateName  String
+  params        Json?
+  sendAt        DateTime
+  status        ScheduledMessageStatus @default(PENDING)
+  // BullMQ job id, set when the send job is enqueued (S3-2).
+  jobId         String?
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+
+  @@index([status, sendAt])
+  @@index([clinicId])
+  @@index([patientId])
+  @@index([appointmentId])
+}
+
+model OnboardingRequest {
+  id              String                  @id @default(cuid())
+  clinicId        String
+  clinic          Clinic                  @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  status          OnboardingRequestStatus @default(PENDING)
+  notes           String?
+  scheduledCallAt DateTime?
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+
+  @@index([clinicId])
+}
+
+model SupportThread {
+  id        String              @id @default(cuid())
+  clinicId  String
+  clinic    Clinic              @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  subject   String?
+  status    SupportThreadStatus @default(OPEN)
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+
+  messages SupportMessage[]
+
+  @@index([clinicId])
+}
+
+model SupportMessage {
+  id           String        @id @default(cuid())
+  threadId     String
+  thread       SupportThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  authorUserId String?
+  authorUser   User?         @relation(fields: [authorUserId], references: [id], onDelete: SetNull)
+  body         String
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([threadId])
+  @@index([authorUserId])
+}
+
+model ErrorLog {
+  id            String        @id @default(cuid())
+  correlationId String?
+  clinicId      String?
+  clinic        Clinic?       @relation(fields: [clinicId], references: [id], onDelete: SetNull)
+  userId        String?
+  user          User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  module        String
+  severity      ErrorSeverity
+  message       String
+  stack         String?
+  context       Json?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([clinicId, createdAt])
+  @@index([userId])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  clinicId    String?
+  clinic      Clinic?  @relation(fields: [clinicId], references: [id], onDelete: SetNull)
+  actorUserId String?
+  actorUser   User?    @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+  action      String
+  entity      String
+  entityId    String?
+  diff        Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([clinicId])
+  @@index([actorUserId])
+}

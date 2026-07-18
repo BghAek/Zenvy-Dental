@@ -21,9 +21,10 @@ Everything about this project lives in [docs/](docs/). Agents and humans alike:
 | [10-agent-workflow](docs/10-agent-workflow.md) | Branch → PR → review → merge process |
 | [11-sprint-plan](docs/11-sprint-plan.md) | v1 sprints S0–S4, parallel task tables |
 | [12-risks-decisions](docs/12-risks-decisions.md) | Decision log (append-only) + risk register |
+| [13-local-dev](docs/13-local-dev.md) | Running the stack locally (Docker + pnpm) |
 
 Agent rulebooks: [CLAUDE.md](CLAUDE.md) (Claude Code) · [AGENTS.md](AGENTS.md) (Antigravity).
 
 ## Status
 
-Pre-code. Sprint 0 not started. This repo currently contains the founding documentation only.
+Sprint 0 in progress — monorepo scaffold merged (S0-1); local Docker stack in PR (S0-2). See [11-sprint-plan](docs/11-sprint-plan.md) for live task status.

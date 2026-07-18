@@ -8,7 +8,7 @@ Status legend: each task gets `⬜ todo / 🟨 in PR / ✅ merged` — update th
 
 | ID | Task | Owner | Depends | Deliverable |
 |---|---|---|---|---|
-| S0-1 | Monorepo scaffold: pnpm workspaces, root ESLint/Prettier/tsconfig, apps+packages skeletons, README per app | [C] Architect | — | `pnpm i && pnpm build` green on empty apps |
+| S0-1 🟨 | Monorepo scaffold: pnpm workspaces, root ESLint/Prettier/tsconfig, apps+packages skeletons, README per app | [C] Architect | — | `pnpm i && pnpm build` green on empty apps |
 | S0-2 | docker-compose (api, redis, nginx) + .env.example + local dev guide | [C] DevOps | S0-1 | `docker compose up` serves hello-world API |
 | S0-3 | CI: GitHub Actions — lint/typecheck/test/build per workspace on PR | [C] DevOps | S0-1 | Red/green checks on a test PR |
 | S0-4 | Prisma schema v1 (all core entities, 02-database) + migrations + seed skeleton | [C] DB Architect | S0-1 | `prisma migrate dev` + seed runs |

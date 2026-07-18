@@ -26,4 +26,4 @@ ZenvyDental: patient-communication SaaS for French dental clinics (WhatsApp AI a
 
 ## Commands
 
-Root: `pnpm i`, `pnpm build`, `pnpm test`, `pnpm lint`. Per app: see its README. Local stack: `docker compose up`. DB: `pnpm --filter api prisma migrate dev`.
+Root: `pnpm i`, `pnpm build`, `pnpm test`, `pnpm lint`. Per app: see its README. Local stack: `docker compose up`. DB: `pnpm --filter @zenvy/api prisma migrate dev`.

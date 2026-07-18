@@ -4,6 +4,8 @@ build/
 .next/
 out/
 coverage/
+next-env.d.ts
+*.tsbuildinfo
 *.log
 .env
 .env.*

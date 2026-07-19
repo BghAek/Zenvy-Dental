@@ -140,21 +140,74 @@ model Clinic {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  role      Role
+  id            String   @id @default(cuid())
+  email         String   @unique
+  name          String
+  emailVerified Boolean  @default(false)
+  image         String?
+  // Default covers Better Auth sign-up; SUPER_ADMIN is seeded, CLINIC_OWNER is
+  // set by the clinic-creation flow (S1-2).
+  role          Role     @default(CLINIC_STAFF)
   // Nullable only for SUPER_ADMIN (docs/02-database.md).
-  clinicId  String?
-  clinic    Clinic?  @relation(fields: [clinicId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  clinicId      String?
+  clinic        Clinic?  @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
+  sessions        Session[]
+  accounts        Account[]
   supportMessages SupportMessage[]
   errorLogs       ErrorLog[]
   auditLogs       AuditLog[]
 
   @@index([clinicId])
+}
+
+// ---------- Better Auth infrastructure (not tenant-scoped) ----------
+
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Account {
+  id                    String    @id @default(cuid())
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  // Better Auth credential hash (scrypt) — never a plaintext password.
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
 }
 
 model Patient {

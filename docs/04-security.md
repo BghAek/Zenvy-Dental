@@ -34,7 +34,7 @@ Guards: `@Roles()` decorator + global tenant guard. Deny by default — a route 
 
 - `helmet` on the API; strict CORS (exact origins for the three frontends).
 - Rate limiting: `@nestjs/throttler` backed by Redis — tight on `/auth/*` (brute force) and `/webhooks/*` (flood), generous on authenticated CRUD.
-- Webhook signatures verified before any parsing (Meta HMAC, Stripe signature). Reject on mismatch, log with correlation ID.
+- Webhook signatures verified against the exact raw body before any payload use (Meta HMAC, Stripe signature) — the framework's JSON parser may run first, but nothing acts on a payload until its signature checks out. Reject on mismatch, log with correlation ID.
 - Secrets: `.env` only, never committed; `.env.example` documents every variable. Meta/Stripe/OpenAI keys live only on the API. WhatsApp tokens stored encrypted at rest (AES-256-GCM, key in env).
 - Dependencies: `pnpm audit` in CI; Renovate/Dependabot post-v1.
 

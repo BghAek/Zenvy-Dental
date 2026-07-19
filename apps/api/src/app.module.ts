@@ -3,8 +3,10 @@ import { APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { RolesGuard } from './auth/rbac';
 import { tenantContextMiddleware } from './tenancy/tenant-context.middleware';
+import { WhatsAppModule } from './whatsapp/whatsapp.module';
 
 @Module({
+  imports: [WhatsAppModule],
   controllers: [AppController],
   providers: [{ provide: APP_GUARD, useClass: RolesGuard }],
 })

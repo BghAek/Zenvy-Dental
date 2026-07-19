@@ -9,6 +9,9 @@
   },
   "dependencies": {
     "@zenvy/shared": "workspace:*",
+    "@zenvy/ui": "workspace:*",
+    "framer-motion": "^11.3.19",
+    "lucide-react": "^0.412.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7"
   },
@@ -16,6 +19,9 @@
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.3",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.39",
+    "tailwindcss": "^3.4.7",
     "typescript": "^5.9.0",
     "vite": "^8.1.5"
   }

@@ -11,6 +11,14 @@ export const ERROR_CODES = {
   DOMAIN_RULE_VIOLATION: 422,
   RATE_LIMITED: 429,
   INTERNAL_ERROR: 500,
+  // Auth / clinic / staff invites (docs/api/auth.md)
+  EMAIL_NOT_VERIFIED: 403,
+  USER_ALREADY_IN_CLINIC: 409,
+  // One code for invalid, expired, or used token — no token probing.
+  INVITE_INVALID: 400,
+  // Patients (docs/api/patients.md)
+  PATIENT_NOT_FOUND: 404,
+  PATIENT_PHONE_EXISTS: 409,
 } as const;
 
 export type ErrorCode = keyof typeof ERROR_CODES;

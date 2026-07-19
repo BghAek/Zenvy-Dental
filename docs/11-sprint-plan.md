@@ -16,13 +16,13 @@ Status legend: each task gets `⬜ todo / 🟨 in PR / ✅ merged` — update th
 | S0-6 ✅ | `packages/shared` foundations: error codes, enums, Zod primitives (phone E.164, pagination), typed API client wrapper | [C] Architect | S0-1 | Both frontends import & compile |
 | S0-7 ✅ | Design system: tokens (colors/type/spacing), Tailwind config, shadcn theme, motion language; documented in `docs/design/design-system.md` | [A] UI/UX Designer | S0-1 | Tokens PR + doc; sample styled page |
 | S0-8 🟨 | Landing skeleton: Next.js static export in monorepo, nav, footer, empty routes (/, /tarifs, /demo), deploys via nginx | [A] Frontend | S0-1, S0-7 | Static build served locally |
-| S0-9 🟨 | Meta setup (founder+Claude pairing): dev app, WhatsApp test number, webhook URL + token config documented in `docs/api/meta-setup.md` | [C] Backend | — | Test message reaches a logged webhook |
+| S0-9 ✅ | Meta setup (founder+Claude pairing): dev app, WhatsApp test number, webhook URL + token config documented in `docs/api/meta-setup.md` | [C] Backend | — | Test message reaches a logged webhook |
 
 ## Sprint 1 — Identity & shell (a dentist can sign up and see a real dashboard)
 
 | ID | Task | Owner | Depends | Deliverable |
 |---|---|---|---|---|
-| S1-1 | Contracts: auth/clinic/trial + patients CRUD (`docs/api/auth.md`, `patients.md`; shared Zod schemas) | [C] Architect | S0-5, S0-6 | Merged contracts |
+| S1-1 🟨 | Contracts: auth/clinic/trial + patients CRUD (`docs/api/auth.md`, `patients.md`; shared Zod schemas) | [C] Architect | S0-5, S0-6 | Merged contracts |
 | S1-2 | API: register → verify email → create clinic → trial starts (14d, no card); invite staff | [C] Backend | S1-1 | Flow passes integration tests |
 | S1-3 | API: patients module (CRUD, tags, E.164 normalize, soft delete, cursor pagination) | [C] Backend | S1-1 | Tenant-isolation + CRUD tests green |
 | S1-4 | Web: auth screens (register/login/verify/reset) FR copy, per design system | [A] Frontend | S1-1, S0-7 | Screens against real API |

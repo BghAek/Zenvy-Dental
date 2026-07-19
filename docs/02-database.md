@@ -25,6 +25,7 @@ A tenant-scoped query without a clinic context must throw, never silently return
 | `WhatsAppAccount` | ✔ | phoneNumberId (globally unique — the tenant-routing key), wabaId, displayNumber, verified status, tokens (encrypted) |
 | `Subscription` | ✔ | stripeCustomerId, stripeSubscriptionId, plan (`premium`), status (`trialing/active/past_due/canceled`), trialEndsAt |
 | `ScheduledMessage` | ✔ | patientId, appointmentId?, kind (`reminder_24h` \| `reminder_2h` \| `followup` \| `custom`), templateName, params, sendAt, status, BullMQ jobId |
+| `StaffInvite` | ✔ | pending staff invitation (docs/api/auth.md): email, tokenHash (unique), expiresAt (7d), acceptedAt? — invited role fixed to `CLINIC_STAFF` in v1; added by the S1-2 migration |
 | `OnboardingRequest` | ✔ | manual WhatsApp-onboarding queue item: status, notes, scheduledCallAt |
 | `SupportThread` / `SupportMessage` | ✔ | clinic ↔ owner support chat |
 | `ErrorLog` | ✔ (nullable) | correlationId, clinicId?, userId?, module, severity, message, stack, context JSON, createdAt |

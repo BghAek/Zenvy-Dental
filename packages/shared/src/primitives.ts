@@ -9,7 +9,11 @@ export const phoneE164Schema = z
 // Cursor pagination (docs/03-api-conventions.md): ?cursor=<id>&limit=<n≤100>.
 export const paginationQuerySchema = z.object({
   cursor: z.string().optional(),
-  limit: z.coerce.number().int().min(1).max(100).default(20),
+  // '' (a bare `?limit=`) counts as unset — coercion would turn it into 0.
+  limit: z.preprocess(
+    (value) => (value === '' ? undefined : value),
+    z.coerce.number().int().min(1).max(100).default(20),
+  ),
 });
 
 export type PaginationQuery = z.infer<typeof paginationQuerySchema>;

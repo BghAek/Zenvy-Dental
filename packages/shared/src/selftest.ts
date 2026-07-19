@@ -24,6 +24,7 @@ async function main() {
   const defaults = paginationQuerySchema.parse({});
   check(defaults.limit === 20 && defaults.cursor === undefined, 'pagination defaults');
   check(paginationQuerySchema.parse({ limit: '50', cursor: 'abc' }).limit === 50, 'limit coerced');
+  check(paginationQuerySchema.parse({ limit: '' }).limit === 20, 'empty limit param → default');
   check(!paginationQuerySchema.safeParse({ limit: 101 }).success, 'limit capped at 100');
 
   const page = paginated(z.object({ id: z.string() }));
@@ -66,6 +67,27 @@ async function main() {
     'non-envelope failure still becomes ApiError',
   );
 
+  globalThis.fetch = async () => new Response('', { status: 200 });
+  const emptyBody = await client.get('/patients', z.object({})).then(
+    () => undefined,
+    (err: unknown) => err,
+  );
+  check(
+    emptyBody instanceof ApiError && emptyBody.status === 200,
+    '2xx non-JSON body still becomes ApiError',
+  );
+
+  globalThis.fetch = async () => new Response(null, { status: 204 });
+  check(
+    (await client.delete('/patients/p1', z.void())) === undefined,
+    '204 passes a void schema',
+  );
+  const surprise204 = await client.delete('/patients/p1', z.object({ id: z.string() })).then(
+    () => undefined,
+    (err: unknown) => err,
+  );
+  check(surprise204 instanceof z.ZodError, '204 against a data schema fails loudly');
+
   globalThis.fetch = async () => new Response(JSON.stringify({ id: 'p1', extra: 1 }), { status: 200 });
   const patient = await client.get('/patients/p1', z.object({ id: z.string() }));
   check(patient.id === 'p1', 'success body parsed by schema');
@@ -73,4 +95,10 @@ async function main() {
   console.log('selftest: all checks passed');
 }
 
-void main();
+// node runs this with default unhandled-rejection semantics, but don't rely on
+// them for the exit code — a failed check must always exit nonzero.
+declare const process: { exitCode?: number };
+main().catch((err: unknown) => {
+  console.error(err);
+  process.exitCode = 1;
+});

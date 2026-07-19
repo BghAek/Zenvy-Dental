@@ -1,9 +1,16 @@
 import { z } from 'zod';
-import { ApiError, errorResponseSchema } from './errors';
+import { ApiError, ErrorCode, errorResponseSchema } from './errors';
 
 export const API_BASE_PATH = '/api/v1';
 
 type Query = Record<string, string | number | boolean | undefined>;
+
+const unexpectedError = (status: number) =>
+  new ApiError(
+    status,
+    'INTERNAL_ERROR' satisfies ErrorCode,
+    'Une erreur est survenue. Veuillez réessayer.',
+  );
 
 // Thin typed fetch wrapper (docs/03-api-conventions.md §Frontend data layer).
 // Session cookie auth, JSON only, responses validated by the caller's Zod schema,
@@ -39,11 +46,18 @@ export function createApiClient(baseUrl = '') {
         throw new ApiError(res.status, code, message, correlationId);
       }
       // Non-envelope failure (proxy error page, network hiccup mid-body…).
-      throw new ApiError(res.status, 'INTERNAL_ERROR', 'Une erreur est survenue. Veuillez réessayer.');
+      throw unexpectedError(res.status);
     }
 
-    if (res.status === 204) return undefined as z.infer<S>;
-    return schema.parse(await res.json()) as z.infer<S>;
+    // 204 has no body: the schema still runs, so a caller expecting data fails
+    // loudly (ZodError) instead of receiving a silently-typed undefined.
+    if (res.status === 204) return schema.parse(undefined) as z.infer<S>;
+    // A 2xx with a non-JSON body (misrouted proxy, truncated response) must
+    // still surface as ApiError, like the error path above.
+    const body: unknown = await res.json().catch(() => {
+      throw unexpectedError(res.status);
+    });
+    return schema.parse(body) as z.infer<S>;
   }
 
   return {

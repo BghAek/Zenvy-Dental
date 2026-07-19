@@ -1,3 +1,5 @@
+import { SampleDesignPage } from './SampleDesignPage';
+
 export function App() {
-  return <p>ZenvyDental — tableau de bord (en construction)</p>;
+  return <SampleDesignPage />;
 }

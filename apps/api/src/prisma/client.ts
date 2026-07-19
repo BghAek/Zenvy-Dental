@@ -11,5 +11,3 @@ export const basePrisma = new PrismaClient({
 // The one client business code imports: every query on a tenant-scoped model
 // is automatically confined to the request's clinic (docs/02-database.md).
 export const prisma = basePrisma.$extends(tenantExtension);
-
-export type TenantPrismaClient = typeof prisma;

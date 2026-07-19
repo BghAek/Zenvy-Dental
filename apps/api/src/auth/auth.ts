@@ -2,8 +2,8 @@ import { prismaAdapter } from '@better-auth/prisma-adapter';
 import { betterAuth } from 'better-auth';
 import { basePrisma } from '../prisma/client';
 
-if (!process.env.BETTER_AUTH_SECRET) {
-  throw new Error('BETTER_AUTH_SECRET is required (see .env.example)');
+if (!process.env.BETTER_AUTH_SECRET || process.env.BETTER_AUTH_SECRET === 'CHANGE_ME') {
+  throw new Error('BETTER_AUTH_SECRET is required — generate one with: openssl rand -base64 32');
 }
 
 export const auth = betterAuth({
@@ -37,7 +37,7 @@ export const auth = betterAuth({
   },
 });
 
-export type SessionUser = (typeof auth.$Infer.Session)['user'];
+type SessionUser = (typeof auth.$Infer.Session)['user'];
 
 declare module 'express' {
   interface Request {

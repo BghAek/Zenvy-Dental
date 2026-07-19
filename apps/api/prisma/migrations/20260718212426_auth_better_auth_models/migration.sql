@@ -4,6 +4,9 @@
   - Made the column `name` on table `User` required. This step will fail if there are existing NULL values in that column.
 
 */
+-- Backfill: the constraint below aborts `migrate deploy` if any NULL remains.
+UPDATE "User" SET "name" = '' WHERE "name" IS NULL;
+
 -- AlterTable
 ALTER TABLE "User" ADD COLUMN     "emailVerified" BOOLEAN NOT NULL DEFAULT false,
 ADD COLUMN     "image" TEXT,

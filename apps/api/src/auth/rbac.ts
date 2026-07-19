@@ -10,8 +10,8 @@ import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
 import { Role } from '../generated/prisma/enums';
 
-export const PUBLIC_KEY = 'zenvy:public';
-export const ROLES_KEY = 'zenvy:roles';
+const PUBLIC_KEY = 'zenvy:public';
+const ROLES_KEY = 'zenvy:roles';
 
 /** Route reachable without a session — health, webhooks, nothing else. */
 export const Public = () => SetMetadata(PUBLIC_KEY, true);

@@ -12,6 +12,13 @@ export async function tenantContextMiddleware(
   _res: Response,
   next: NextFunction,
 ): Promise<void> {
+  // Health probes hit on a tight interval — spare them the session DB lookup.
+  // (/api/v1/auth/* never reaches here: Better Auth's handler is mounted
+  // ahead of the Nest pipeline and terminates those requests itself.)
+  if (req.path === '/health') {
+    next();
+    return;
+  }
   const session = await auth.api.getSession({ headers: fromNodeHeaders(req.headers) });
   if (!session) {
     next();

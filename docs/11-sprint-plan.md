@@ -11,8 +11,8 @@ Status legend: each task gets `⬜ todo / 🟨 in PR / ✅ merged` — update th
 | S0-1 ✅ | Monorepo scaffold: pnpm workspaces, root ESLint/Prettier/tsconfig, apps+packages skeletons, README per app | [C] Architect | — | `pnpm i && pnpm build` green on empty apps |
 | S0-2 ✅ | docker-compose (api, redis, nginx) + .env.example + local dev guide | [C] DevOps | S0-1 | `docker compose up` serves hello-world API |
 | S0-3 ✅ | CI: GitHub Actions — lint/typecheck/test/build per workspace on PR | [C] DevOps | S0-1 | Red/green checks on a test PR |
-| S0-4 🟨 | Prisma schema v1 (all core entities, 02-database) + migrations + seed skeleton | [C] DB Architect | S0-1 | `prisma migrate dev` + seed runs |
-| S0-5 | Better Auth integration + session middleware + RBAC guards + tenant Prisma extension + cross-tenant test harness | [C] Security | S0-4 | Auth'd hello route; tenant-isolation tests green |
+| S0-4 ✅ | Prisma schema v1 (all core entities, 02-database) + migrations + seed skeleton | [C] DB Architect | S0-1 | `prisma migrate dev` + seed runs |
+| S0-5 🟨 | Better Auth integration + session middleware + RBAC guards + tenant Prisma extension + cross-tenant test harness | [C] Security | S0-4 | Auth'd hello route; tenant-isolation tests green |
 | S0-6 | `packages/shared` foundations: error codes, enums, Zod primitives (phone E.164, pagination), typed API client wrapper | [C] Architect | S0-1 | Both frontends import & compile |
 | S0-7 | Design system: tokens (colors/type/spacing), Tailwind config, shadcn theme, motion language; documented in `docs/design/design-system.md` | [A] UI/UX Designer | S0-1 | Tokens PR + doc; sample styled page |
 | S0-8 | Landing skeleton: Next.js static export in monorepo, nav, footer, empty routes (/, /tarifs, /demo), deploys via nginx | [A] Frontend | S0-1, S0-7 | Static build served locally |

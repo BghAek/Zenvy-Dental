@@ -12,6 +12,22 @@ concurrency:
 jobs:
   ci:
     runs-on: ubuntu-latest
+    # Throwaway Postgres for the DB-backed suites (tenant isolation, auth flow).
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: zenvy_ci
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://postgres:ci@localhost:5432/zenvy_ci
+      BETTER_AUTH_SECRET: ci-only-secret
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4
@@ -25,5 +41,7 @@ jobs:
         run: pnpm lint
       - name: Build (includes per-workspace typecheck)
         run: pnpm build
+      - name: Migrate test database
+        run: pnpm --filter @zenvy/api prisma migrate deploy
       - name: Test
         run: pnpm test

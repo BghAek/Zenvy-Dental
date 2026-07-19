@@ -57,6 +57,24 @@ Postgres is Neon (external, serverless) — no local container (01-architecture 
 - Regenerate the client (output is gitignored at `apps/api/src/generated/prisma`): `pnpm --filter @zenvy/api prisma generate`
 - Seed (SUPER_ADMIN + demo clinic « Cabinet Dentaire Lumière », idempotent): `pnpm --filter @zenvy/api prisma db seed`
 
+## Auth (S0-5)
+
+The API refuses to boot without `BETTER_AUTH_SECRET` (generate one: `openssl rand -base64 32`); `BETTER_AUTH_URL` defaults to `http://localhost:3001`. Both live in the repo-root `.env` (see `.env.example`) — docker compose forwards them via `env_file`.
+
+Auth endpoints are served by Better Auth under `/api/v1/auth/*` (e.g. `POST /api/v1/auth/sign-up/email`, `sign-in/email`, `sign-out`). Every other route requires a session cookie plus an explicit `@Roles()` allow-list — routes without one fail closed.
+
+## Tests
+
+`pnpm --filter @zenvy/api test` (vitest). The tenant-isolation and auth-flow suites hit a real Postgres via `DATABASE_URL` — point it at a migrated throwaway container, e.g.:
+
+```bash
+docker run -d --name zenvy-pg -e POSTGRES_PASSWORD=zenvy -e POSTGRES_DB=zenvy -p 5433:5432 postgres:16
+DATABASE_URL=postgresql://postgres:zenvy@localhost:5433/zenvy pnpm --filter @zenvy/api prisma migrate dev
+DATABASE_URL=postgresql://postgres:zenvy@localhost:5433/zenvy pnpm --filter @zenvy/api test
+```
+
+CI runs the same suites against a Postgres service container.
+
 ## Troubleshooting
 
 - 502 from nginx right after `up` → the API container is still booting; retry in a few seconds.

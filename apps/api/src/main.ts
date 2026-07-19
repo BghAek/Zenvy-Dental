@@ -1,9 +1,9 @@
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
+import './env';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  app.setGlobalPrefix('api/v1', { exclude: ['health'] });
+  // Imported after env so module-level config (Prisma, Better Auth) sees .env.
+  const { createApp } = await import('./app');
+  const app = await createApp();
   await app.listen(process.env.PORT ?? 3001);
 }
 

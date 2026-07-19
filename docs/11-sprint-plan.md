@@ -13,8 +13,8 @@ Status legend: each task gets `⬜ todo / 🟨 in PR / ✅ merged` — update th
 | S0-3 ✅ | CI: GitHub Actions — lint/typecheck/test/build per workspace on PR | [C] DevOps | S0-1 | Red/green checks on a test PR |
 | S0-4 ✅ | Prisma schema v1 (all core entities, 02-database) + migrations + seed skeleton | [C] DB Architect | S0-1 | `prisma migrate dev` + seed runs |
 | S0-5 ✅ | Better Auth integration + session middleware + RBAC guards + tenant Prisma extension + cross-tenant test harness | [C] Security | S0-4 | Auth'd hello route; tenant-isolation tests green |
-| S0-6 🟨 | `packages/shared` foundations: error codes, enums, Zod primitives (phone E.164, pagination), typed API client wrapper | [C] Architect | S0-1 | Both frontends import & compile |
-| S0-7 | Design system: tokens (colors/type/spacing), Tailwind config, shadcn theme, motion language; documented in `docs/design/design-system.md` | [A] UI/UX Designer | S0-1 | Tokens PR + doc; sample styled page |
+| S0-6 ✅ | `packages/shared` foundations: error codes, enums, Zod primitives (phone E.164, pagination), typed API client wrapper | [C] Architect | S0-1 | Both frontends import & compile |
+| S0-7 ✅ | Design system: tokens (colors/type/spacing), Tailwind config, shadcn theme, motion language; documented in `docs/design/design-system.md` | [A] UI/UX Designer | S0-1 | Tokens PR + doc; sample styled page |
 | S0-8 | Landing skeleton: Next.js static export in monorepo, nav, footer, empty routes (/, /tarifs, /demo), deploys via nginx | [A] Frontend | S0-1, S0-7 | Static build served locally |
 | S0-9 | Meta setup (founder+Claude pairing): dev app, WhatsApp test number, webhook URL + token config documented in `docs/api/meta-setup.md` | [C] Backend | — | Test message reaches a logged webhook |
 
@@ -26,7 +26,7 @@ Status legend: each task gets `⬜ todo / 🟨 in PR / ✅ merged` — update th
 | S1-2 | API: register → verify email → create clinic → trial starts (14d, no card); invite staff | [C] Backend | S1-1 | Flow passes integration tests |
 | S1-3 | API: patients module (CRUD, tags, E.164 normalize, soft delete, cursor pagination) | [C] Backend | S1-1 | Tenant-isolation + CRUD tests green |
 | S1-4 | Web: auth screens (register/login/verify/reset) FR copy, per design system | [A] Frontend | S1-1, S0-7 | Screens against real API |
-| S1-5 | Web: dashboard shell — sidebar nav, header, empty states, error boundary, loading patterns | [A] Frontend | S0-7 | Shell with placeholder routes |
+| S1-5 | Web: dashboard shell — sidebar nav, header, empty states, error boundary, loading patterns | [A] Frontend | S0-7 ✅ | Shell with placeholder routes |
 | S1-6 | Web: patients pages (list/search/detail/create/edit) | [A] Frontend | S1-3, S1-5 | Full CRUD in UI |
 | S1-7 | Landing: hero (3D, R3F) + value props + pricing page (€20 anchor / €399 + trial CTA) | [A] Frontend | S0-8 | Lighthouse ≥90 perf/SEO |
 | S1-8 | Review pass: Frontend Reviewer on S1-4/5/6/7 | [C] FE Reviewer | those PRs | Findings addressed pre-merge |

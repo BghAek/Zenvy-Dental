@@ -10,8 +10,10 @@ import { auth } from './auth/auth';
 export async function createApp(): Promise<INestApplication> {
   // Better Auth reads the raw body itself; its handler is mounted before the
   // JSON body parser is re-enabled for the rest of the API.
+  // rawBody keeps the exact bytes available for webhook HMAC checks (Meta, Stripe).
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     bodyParser: false,
+    rawBody: true,
   });
   app.use(`${API_BASE_PATH}/auth`, toNodeHandler(auth));
   app.useBodyParser('json');

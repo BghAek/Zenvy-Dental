@@ -12,10 +12,12 @@ export async function tenantContextMiddleware(
   _res: Response,
   next: NextFunction,
 ): Promise<void> {
-  // Health probes hit on a tight interval — spare them the session DB lookup.
-  // (/api/v1/auth/* never reaches here: Better Auth's handler is mounted
-  // ahead of the Nest pipeline and terminates those requests itself.)
-  if (req.path === '/health') {
+  // Sessions are cookie-based — cookie-less requests (health probes, Meta and
+  // later Stripe webhooks) skip the session DB lookup so those paths stay up
+  // even when Postgres is not. (/api/v1/auth/* never reaches here: Better
+  // Auth's handler is mounted ahead of the Nest pipeline and terminates those
+  // requests itself.)
+  if (!req.headers.cookie) {
     next();
     return;
   }

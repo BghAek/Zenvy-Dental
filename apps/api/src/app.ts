@@ -1,6 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { API_BASE_PATH } from '@zenvy/shared';
 import { toNodeHandler } from 'better-auth/node';
 import { AppModule } from './app.module';
 import { auth } from './auth/auth';
@@ -12,8 +13,8 @@ export async function createApp(): Promise<INestApplication> {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     bodyParser: false,
   });
-  app.use('/api/v1/auth', toNodeHandler(auth));
+  app.use(`${API_BASE_PATH}/auth`, toNodeHandler(auth));
   app.useBodyParser('json');
-  app.setGlobalPrefix('api/v1', { exclude: ['health'] });
+  app.setGlobalPrefix(API_BASE_PATH.slice(1), { exclude: ['health'] });
   return app;
 }

@@ -10,6 +10,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@zenvy/shared": "workspace:*",
     "@better-auth/prisma-adapter": "^1.6.23",
     "@nestjs/common": "^11.1.28",
     "@nestjs/core": "^11.1.28",

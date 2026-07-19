@@ -1,4 +1,5 @@
 import { prismaAdapter } from '@better-auth/prisma-adapter';
+import { API_BASE_PATH } from '@zenvy/shared';
 import { betterAuth } from 'better-auth';
 import { basePrisma } from '../prisma/client';
 
@@ -10,7 +11,7 @@ export const auth = betterAuth({
   // Session cookies default to HttpOnly + SameSite=Lax, Secure whenever the
   // baseURL is https (docs/04-security.md §Authentication).
   baseURL: process.env.BETTER_AUTH_URL ?? 'http://localhost:3001',
-  basePath: '/api/v1/auth',
+  basePath: `${API_BASE_PATH}/auth`,
   secret: process.env.BETTER_AUTH_SECRET,
   database: prismaAdapter(basePrisma, { provider: 'postgresql' }),
   emailAndPassword: {

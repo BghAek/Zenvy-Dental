@@ -15,7 +15,7 @@ Status legend: each task gets `⬜ todo / 🟨 in PR / ✅ merged` — update th
 | S0-5 ✅ | Better Auth integration + session middleware + RBAC guards + tenant Prisma extension + cross-tenant test harness | [C] Security | S0-4 | Auth'd hello route; tenant-isolation tests green |
 | S0-6 ✅ | `packages/shared` foundations: error codes, enums, Zod primitives (phone E.164, pagination), typed API client wrapper | [C] Architect | S0-1 | Both frontends import & compile |
 | S0-7 ✅ | Design system: tokens (colors/type/spacing), Tailwind config, shadcn theme, motion language; documented in `docs/design/design-system.md` | [A] UI/UX Designer | S0-1 | Tokens PR + doc; sample styled page |
-| S0-8 | Landing skeleton: Next.js static export in monorepo, nav, footer, empty routes (/, /tarifs, /demo), deploys via nginx | [A] Frontend | S0-1, S0-7 | Static build served locally |
+| S0-8 🟨 | Landing skeleton: Next.js static export in monorepo, nav, footer, empty routes (/, /tarifs, /demo), deploys via nginx | [A] Frontend | S0-1, S0-7 | Static build served locally |
 | S0-9 🟨 | Meta setup (founder+Claude pairing): dev app, WhatsApp test number, webhook URL + token config documented in `docs/api/meta-setup.md` | [C] Backend | — | Test message reaches a logged webhook |
 
 ## Sprint 1 — Identity & shell (a dentist can sign up and see a real dashboard)

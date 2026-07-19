@@ -8,6 +8,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@zenvy/shared": "workspace:*",
     "react": "^19.2.7",
     "react-dom": "^19.2.7"
   },

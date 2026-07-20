@@ -12,8 +12,10 @@ export const blankToUndefined = (value: unknown) =>
   typeof value === 'string' && value.trim() === '' ? undefined : value;
 
 // Required trimmed text with French messages — the common short-field shape.
+// The `error` covers a missing/non-string value (Zod's invalid_type would
+// otherwise be English); min(1) covers the empty/blank case after trim.
 export const requiredText = (max: number, requiredMessage = 'Champ requis.') =>
-  z.string().trim().min(1, requiredMessage).max(max, `${max} caractères maximum.`);
+  z.string({ error: requiredMessage }).trim().min(1, requiredMessage).max(max, `${max} caractères maximum.`);
 
 // Human phone input → E.164: strip separators, "00…" → "+…", French national
 // "0…" → "+33…". Other countries must already carry their "+<code>" prefix.

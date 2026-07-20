@@ -103,6 +103,8 @@ export type StaffInvite = z.infer<typeof staffInviteSchema>;
 // POST /staff-invites/accept — invitee is authenticated, verified, clinic-less.
 // Responds with the updated MeResponse so the frontend refreshes in one call.
 export const acceptStaffInviteRequestSchema = z.object({
-  token: z.string().min(1),
+  // French message on both the missing/non-string and empty cases — the
+  // envelope's message renders directly in the UI (all user-visible = French).
+  token: z.string({ error: 'Jeton d’invitation manquant.' }).min(1, 'Jeton d’invitation manquant.'),
 });
 export type AcceptStaffInviteRequest = z.infer<typeof acceptStaffInviteRequestSchema>;

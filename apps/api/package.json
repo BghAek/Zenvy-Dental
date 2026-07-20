@@ -10,16 +10,17 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@zenvy/shared": "workspace:*",
     "@better-auth/prisma-adapter": "^1.6.23",
     "@nestjs/common": "^11.1.28",
     "@nestjs/core": "^11.1.28",
     "@nestjs/platform-express": "^11.1.28",
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
+    "@zenvy/shared": "workspace:*",
     "better-auth": "^1.6.23",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.2"
+    "rxjs": "^7.8.2",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.24",

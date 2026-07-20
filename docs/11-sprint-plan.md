@@ -22,8 +22,8 @@ Status legend: each task gets `⬜ todo / 🟨 in PR / ✅ merged` — update th
 
 | ID | Task | Owner | Depends | Deliverable |
 |---|---|---|---|---|
-| S1-1 🟨 | Contracts: auth/clinic/trial + patients CRUD (`docs/api/auth.md`, `patients.md`; shared Zod schemas) | [C] Architect | S0-5, S0-6 | Merged contracts |
-| S1-2 | API: register → verify email → create clinic → trial starts (14d, no card); invite staff | [C] Backend | S1-1 | Flow passes integration tests |
+| S1-1 ✅ | Contracts: auth/clinic/trial + patients CRUD (`docs/api/auth.md`, `patients.md`; shared Zod schemas) | [C] Architect | S0-5, S0-6 | Merged contracts |
+| S1-2 🟨 | API: register → verify email → create clinic → trial starts (14d, no card); invite staff | [C] Backend | S1-1 | Flow passes integration tests |
 | S1-3 | API: patients module (CRUD, tags, E.164 normalize, soft delete, cursor pagination) | [C] Backend | S1-1 | Tenant-isolation + CRUD tests green |
 | S1-4 | Web: auth screens (register/login/verify/reset) FR copy, per design system | [A] Frontend | S1-1, S0-7 | Screens against real API |
 | S1-5 | Web: dashboard shell — sidebar nav, header, empty states, error boundary, loading patterns | [A] Frontend | S0-7 ✅ | Shell with placeholder routes |

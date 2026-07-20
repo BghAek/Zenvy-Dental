@@ -133,6 +133,7 @@ model Clinic {
   whatsAppAccounts   WhatsAppAccount[]
   subscription       Subscription?
   scheduledMessages  ScheduledMessage[]
+  staffInvites       StaffInvite[]
   onboardingRequests OnboardingRequest[]
   supportThreads     SupportThread[]
   errorLogs          ErrorLog[]
@@ -349,6 +350,22 @@ model ScheduledMessage {
   @@index([clinicId])
   @@index([patientId])
   @@index([appointmentId])
+}
+
+model StaffInvite {
+  id       String @id @default(cuid())
+  clinicId String
+  clinic   Clinic @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  email    String
+  // sha256 of the emailed token — the plaintext token is never stored.
+  tokenHash  String    @unique
+  expiresAt  DateTime
+  acceptedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  // One invite per email per clinic (docs/api/auth.md) — re-inviting replaces.
+  @@unique([clinicId, email])
 }
 
 model OnboardingRequest {

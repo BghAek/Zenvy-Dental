@@ -5,10 +5,17 @@ import {
   ApiError,
   ERROR_CODES,
   createApiClient,
+  createClinicRequestSchema,
+  createPatientRequestSchema,
+  listPatientsQuerySchema,
+  meResponseSchema,
+  normalizePhone,
   paginated,
   paginationQuerySchema,
   phoneE164Schema,
+  phoneInputSchema,
   roleSchema,
+  updatePatientRequestSchema,
 } from './index';
 
 function check(cond: unknown, label: string): asserts cond {
@@ -91,6 +98,51 @@ async function main() {
   globalThis.fetch = async () => new Response(JSON.stringify({ id: 'p1', extra: 1 }), { status: 200 });
   const patient = await client.get('/patients/p1', z.object({ id: z.string() }));
   check(patient.id === 'p1', 'success body parsed by schema');
+
+  // S1-1 contracts: phone normalization, auth/clinic, patients.
+  check(normalizePhone('06 12 34 56 78') === '+33612345678', 'FR national normalized');
+  check(normalizePhone('0033.6-12(34)56 78') === '+33612345678', '00-prefix + separators normalized');
+  check(phoneInputSchema.parse('+33 6 12 34 56 78') === '+33612345678', 'E.164 input kept');
+  check(!phoneInputSchema.safeParse('abc').success, 'non-numeric phone rejected');
+
+  const clinicReq = createClinicRequestSchema.parse({ name: '  Cabinet Lumière ' });
+  check(clinicReq.name === 'Cabinet Lumière' && clinicReq.timezone === 'Europe/Paris', 'clinic defaults + trim');
+  check(!createClinicRequestSchema.safeParse({ name: 'X', timezone: 'Mars/Olympus' }).success, 'bad timezone rejected');
+  const blankClinic = createClinicRequestSchema.parse({ name: 'X', phone: '', address: '', timezone: '' });
+  check(
+    blankClinic.phone === undefined && blankClinic.address === undefined && blankClinic.timezone === 'Europe/Paris',
+    'blank optional clinic fields count as unset',
+  );
+  check(createClinicRequestSchema.parse({ name: 'X', timezone: 'europe/paris' }).timezone === 'Europe/Paris', 'timezone canonicalized');
+
+  check(
+    meResponseSchema.safeParse({
+      user: {
+        id: 'u1',
+        email: 'a@b.fr',
+        name: 'A',
+        emailVerified: true,
+        role: 'CLINIC_OWNER',
+        clinicId: null,
+      },
+      clinic: null,
+      subscription: null,
+    }).success,
+    'me response with no clinic yet',
+  );
+
+  const newPatient = createPatientRequestSchema.parse({
+    firstName: 'Marie',
+    lastName: 'Curie',
+    phone: '06 12 34 56 78',
+  });
+  check(newPatient.phone === '+33612345678' && newPatient.tags.length === 0, 'patient create: phone normalized, tags default');
+  check(!createPatientRequestSchema.safeParse({ firstName: '', lastName: 'X', phone: '0612345678' }).success, 'empty first name rejected');
+  check(updatePatientRequestSchema.safeParse({}).success, 'empty patch allowed');
+  check(updatePatientRequestSchema.parse({ notes: null }).notes === null, 'notes clearable with null');
+  check(listPatientsQuerySchema.parse({ search: ' Marie ' }).search === 'Marie', 'search trimmed');
+  check(listPatientsQuerySchema.parse({ search: '', tag: '' }).search === undefined, 'cleared search box = unset');
+  check(ERROR_CODES.PATIENT_NOT_FOUND === 404 && ERROR_CODES.INVITE_INVALID === 400, 'S1-1 error codes mapped');
 
   console.log('selftest: all checks passed');
 }

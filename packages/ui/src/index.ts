@@ -7,3 +7,5 @@ export * from './components/alert';
 export * from './components/empty-state';
 export * from './components/spinner';
 export * from './utils';
+export * from './components/table';
+export * from './components/badge';

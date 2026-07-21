@@ -8,6 +8,10 @@ import { ResetPasswordPage } from './pages/auth/ResetPasswordPage';
 import { DashboardLayout } from './components/layout/DashboardLayout';
 import { EmptyState, Button } from '@zenvy/ui';
 import { Settings } from 'lucide-react';
+import { PatientListPage } from './pages/patients/PatientListPage';
+import { PatientDetailPage } from './pages/patients/PatientDetailPage';
+import { PatientCreatePage } from './pages/patients/PatientCreatePage';
+import { PatientEditPage } from './pages/patients/PatientEditPage';
 
 const queryClient = new QueryClient();
 
@@ -39,7 +43,10 @@ export function App() {
           <Route element={<DashboardLayout />}>
             <Route path="/" element={<PlaceholderPage title="Tableau de bord" description="Bienvenue sur votre espace ZenvyDental." />} />
             <Route path="/inbox" element={<PlaceholderPage title="Messages" description="Vos conversations avec les patients s'afficheront ici." />} />
-            <Route path="/patients" element={<PlaceholderPage title="Patients" description="Gérez votre base de patients." />} />
+            <Route path="/patients" element={<PatientListPage />} />
+            <Route path="/patients/new" element={<PatientCreatePage />} />
+            <Route path="/patients/:id" element={<PatientDetailPage />} />
+            <Route path="/patients/:id/edit" element={<PatientEditPage />} />
             <Route path="/appointments" element={<PlaceholderPage title="Rendez-vous" description="Consultez et planifiez vos rendez-vous." />} />
             <Route path="/settings" element={<PlaceholderPage title="Paramètres" description="Configurez votre clinique et l'assistant IA." />} />
           </Route>

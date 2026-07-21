@@ -57,9 +57,13 @@ export function VerifyEmailPage() {
           throw new Error('Jeton de vérification invalide ou expiré.');
         }
         setVerificationStatus('success');
-      } catch (err: any) {
+      } catch (err: unknown) {
         setVerificationStatus('error');
-        setErrorMessage(err.message);
+        if (err instanceof Error) {
+          setErrorMessage(err.message);
+        } else {
+          setErrorMessage('Erreur de vérification.');
+        }
       }
     };
 

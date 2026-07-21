@@ -7,11 +7,17 @@
     "build": "next build"
   },
   "dependencies": {
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.6.1",
+    "@types/three": "^0.185.1",
     "@zenvy/shared": "workspace:*",
     "@zenvy/ui": "workspace:*",
+    "framer-motion": "^11.3.19",
+    "lucide-react": "^0.412.0",
     "next": "^16.2.10",
     "react": "^19.2.7",
-    "react-dom": "^19.2.7"
+    "react-dom": "^19.2.7",
+    "three": "^0.185.1"
   },
   "devDependencies": {
     "@types/node": "^26.1.1",

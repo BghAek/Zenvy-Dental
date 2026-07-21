@@ -9,7 +9,7 @@ const navItems = [
   { icon: Settings, label: "Paramètres", to: "/settings" },
 ];
 
-export function Sidebar() {
+export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <aside className="w-64 border-r border-border bg-background flex flex-col h-full">
       <div className="h-16 flex items-center px-6 border-b border-border">
@@ -20,6 +20,7 @@ export function Sidebar() {
           <NavLink
             key={item.to}
             to={item.to}
+            onClick={onNavigate}
             className={({ isActive }) =>
               `flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                 isActive
@@ -35,8 +36,8 @@ export function Sidebar() {
       </nav>
       <div className="p-4 border-t border-border">
         <div className="text-sm text-muted-foreground px-3">
-          Soutien technique? <br/>
-          <a href="#" className="text-primary hover:underline font-medium">Contacter Zenvy</a>
+          Besoin d’aide&nbsp;? <br/>
+          <a href="mailto:support@zenvydental.fr" className="text-primary hover:underline font-medium">Contacter Zenvy</a>
         </div>
       </div>
     </aside>

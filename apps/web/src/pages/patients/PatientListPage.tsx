@@ -20,7 +20,7 @@ export function PatientListPage() {
   const [tag, setTag] = useState('');
   const navigate = useNavigate();
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = usePatients({
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, isError } = usePatients({
     limit: 20,
     search: search || undefined,
     tag: tag || undefined,
@@ -52,6 +52,7 @@ export function PatientListPage() {
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
+            aria-label="Rechercher un patient par nom ou numéro"
             placeholder="Rechercher par nom ou numéro..."
             className="pl-8"
             value={search}
@@ -59,6 +60,7 @@ export function PatientListPage() {
           />
         </div>
         <Input
+          aria-label="Filtrer par étiquette"
           placeholder="Filtrer par étiquette..."
           className="max-w-[200px]"
           value={tag}
@@ -84,6 +86,12 @@ export function PatientListPage() {
                   <Spinner className="mx-auto h-6 w-6" />
                 </TableCell>
               </TableRow>
+            ) : isError ? (
+              <TableRow>
+                <TableCell colSpan={5} className="h-24 text-center text-destructive">
+                  Une erreur s'est produite lors du chargement des patients. Veuillez réessayer.
+                </TableCell>
+              </TableRow>
             ) : patients.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
@@ -94,7 +102,13 @@ export function PatientListPage() {
               patients.map((patient) => (
                 <TableRow key={patient.id} className="cursor-pointer" onClick={() => navigate(`/patients/${patient.id}`)}>
                   <TableCell className="font-medium">
-                    {patient.firstName} {patient.lastName}
+                    <Link
+                      to={`/patients/${patient.id}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="hover:underline focus-visible:underline focus-visible:outline-none"
+                    >
+                      {patient.firstName} {patient.lastName}
+                    </Link>
                   </TableCell>
                   <TableCell>{patient.phone}</TableCell>
                   <TableCell>

@@ -3,7 +3,7 @@ import { useCreatePatient } from '../../lib/queries/patients';
 import { PatientForm } from './components/PatientForm';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@zenvy/ui';
 import { ArrowLeft } from 'lucide-react';
-import { CreatePatientRequest } from '@zenvy/shared/src/patients';
+import { CreatePatientRequest } from '@zenvy/shared';
 
 export function PatientCreatePage() {
   const navigate = useNavigate();

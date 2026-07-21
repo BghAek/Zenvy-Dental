@@ -1,5 +1,12 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Check } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Tarifs — ZenvyDental",
+  description:
+    "Un abonnement unique pour transformer la communication de votre cabinet dentaire. Essai gratuit de 14 jours, sans carte bancaire.",
+};
 
 export default function TarifsPage() {
   return (

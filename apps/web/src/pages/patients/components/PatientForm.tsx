@@ -5,10 +5,10 @@ import {
   CreatePatientRequest,
   createPatientRequestSchema,
   Patient,
-} from '@zenvy/shared/src/patients';
+  ApiError,
+} from '@zenvy/shared';
 import { Button, Input, Label, Alert, AlertDescription, Spinner } from '@zenvy/ui';
 import { useState } from 'react';
-import { ApiError } from '@zenvy/shared/src/errors';
 
 type FormValues = z.input<typeof createPatientRequestSchema>;
 

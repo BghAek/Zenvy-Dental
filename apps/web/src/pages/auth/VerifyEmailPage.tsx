@@ -17,6 +17,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  Spinner,
 } from '@zenvy/ui';
 import { Mail, CheckCircle2, XCircle } from 'lucide-react';
 import { z } from 'zod';
@@ -52,7 +53,7 @@ export function VerifyEmailPage() {
       setVerificationStatus('loading');
       try {
         const apiUrl = import.meta.env.VITE_API_URL || '';
-        const res = await fetch(`${apiUrl}/api/v1/auth/verify-email?token=${token}`);
+        const res = await fetch(`${apiUrl}/api/v1/auth/verify-email?token=${encodeURIComponent(token)}`);
         if (!res.ok) {
           throw new Error('Jeton de vérification invalide ou expiré.');
         }
@@ -101,7 +102,7 @@ export function VerifyEmailPage() {
       <div className="flex min-h-screen items-center justify-center p-4 bg-background">
         <Card className="w-full max-w-md text-center py-12">
           <CardContent className="space-y-4">
-            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+            <Spinner className="h-8 w-8 mx-auto" />
             <p className="text-muted-foreground">Vérification en cours...</p>
           </CardContent>
         </Card>
@@ -151,6 +152,14 @@ export function VerifyEmailPage() {
             <Alert variant="destructive">
               <XCircle className="w-4 h-4" />
               <AlertDescription>{errorMessage}</AlertDescription>
+            </Alert>
+          )}
+
+          {resendMutation.isError && !resendSuccess && (
+            <Alert variant="destructive">
+              <AlertDescription>
+                Impossible de renvoyer l’e-mail. Veuillez réessayer.
+              </AlertDescription>
             </Alert>
           )}
 

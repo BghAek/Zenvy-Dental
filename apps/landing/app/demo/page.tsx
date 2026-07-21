@@ -1,3 +1,11 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Réserver une démo — ZenvyDental",
+  description:
+    "Découvrez ZenvyDental en action avec notre équipe et voyez comment automatiser la communication de votre cabinet dentaire.",
+};
+
 export default function DemoPage() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">

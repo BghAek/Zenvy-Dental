@@ -2,7 +2,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { usePatient, useDeletePatient } from '../../lib/queries/patients';
 import { Button, Badge, Spinner, Alert, AlertDescription, Card, CardHeader, CardTitle, CardContent } from '@zenvy/ui';
 import { ArrowLeft, Edit, Trash, Calendar } from 'lucide-react';
-import { ApiError } from '@zenvy/shared/src/errors';
+import { ApiError } from '@zenvy/shared';
 
 export function PatientDetailPage() {
   const { id } = useParams<{ id: string }>();

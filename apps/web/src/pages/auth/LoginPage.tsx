@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Link, useNavigate } from 'react-router-dom';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Card,
   CardContent,
@@ -23,6 +23,7 @@ import {
 } from '@zenvy/ui';
 import { api } from '../../lib/api';
 import { meResponseSchema } from '@zenvy/shared';
+import { sessionKeys } from '../../lib/queries/session';
 
 const loginSchema = z.object({
   email: z.string().email('Adresse e-mail invalide.'),
@@ -33,6 +34,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
 
   const form = useForm<LoginFormValues>({
@@ -56,24 +58,17 @@ export function LoginPage() {
       });
 
       if (!res.ok) {
-        let message = 'Identifiants incorrects ou erreur de connexion.';
-        try {
-          const data = await res.json();
-          if (data?.message) {
-            message = data.message;
-          }
-        } catch {
-          // Ignore
-        }
-        throw new Error(message);
+        // Better Auth's default messages are English; keep copy French and
+        // generic (no account enumeration) — docs/07 §Language, docs/04.
+        throw new Error('Identifiants incorrects ou erreur de connexion.');
       }
-      
-      // Optionally fetch /me to get user context immediately
+
+      // Fetch /me once and seed the session cache so RequireAuth reuses it.
       const me = await api.get('/me', meResponseSchema);
       return me;
     },
-    onSuccess: () => {
-      // Redirect to the main dashboard layout
+    onSuccess: (me) => {
+      queryClient.setQueryData(sessionKeys.me, me);
       navigate('/');
     },
     onError: (error: Error) => {

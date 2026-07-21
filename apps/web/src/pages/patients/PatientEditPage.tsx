@@ -3,8 +3,7 @@ import { usePatient, useUpdatePatient } from '../../lib/queries/patients';
 import { PatientForm } from './components/PatientForm';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, Spinner, Alert, AlertDescription } from '@zenvy/ui';
 import { ArrowLeft } from 'lucide-react';
-import { UpdatePatientRequest } from '@zenvy/shared/src/patients';
-import { ApiError } from '@zenvy/shared/src/errors';
+import { UpdatePatientRequest, ApiError } from '@zenvy/shared';
 
 export function PatientEditPage() {
   const { id } = useParams<{ id: string }>();

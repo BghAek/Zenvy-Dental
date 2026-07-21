@@ -7,7 +7,7 @@ import {
   ListPatientsQuery,
   patientListResponseSchema,
   patientSchema,
-} from '@zenvy/shared/src/patients'; // Note: adjust import if needed based on tsconfig
+} from '@zenvy/shared';
 
 export const patientKeys = {
   all: ['patients'] as const,

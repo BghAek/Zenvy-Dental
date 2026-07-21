@@ -6,6 +6,7 @@ import { LoginPage } from './pages/auth/LoginPage';
 import { VerifyEmailPage } from './pages/auth/VerifyEmailPage';
 import { ResetPasswordPage } from './pages/auth/ResetPasswordPage';
 import { DashboardLayout } from './components/layout/DashboardLayout';
+import { RequireAuth } from './components/auth/RequireAuth';
 import { EmptyState, Button } from '@zenvy/ui';
 import { Settings } from 'lucide-react';
 import { PatientListPage } from './pages/patients/PatientListPage';
@@ -40,7 +41,8 @@ export function App() {
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/sample" element={<SampleDesignPage />} />
           
-          <Route element={<DashboardLayout />}>
+          <Route element={<RequireAuth />}>
+            <Route element={<DashboardLayout />}>
             <Route path="/" element={<PlaceholderPage title="Tableau de bord" description="Bienvenue sur votre espace ZenvyDental." />} />
             <Route path="/inbox" element={<PlaceholderPage title="Messages" description="Vos conversations avec les patients s'afficheront ici." />} />
             <Route path="/patients" element={<PatientListPage />} />
@@ -49,6 +51,7 @@ export function App() {
             <Route path="/patients/:id/edit" element={<PatientEditPage />} />
             <Route path="/appointments" element={<PlaceholderPage title="Rendez-vous" description="Consultez et planifiez vos rendez-vous." />} />
             <Route path="/settings" element={<PlaceholderPage title="Paramètres" description="Configurez votre clinique et l'assistant IA." />} />
+            </Route>
           </Route>
         </Routes>
       </BrowserRouter>

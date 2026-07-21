@@ -57,16 +57,13 @@ export function RegisterPage() {
       });
 
       if (!res.ok) {
-        let message = 'Une erreur est survenue lors de l\'inscription.';
-        try {
-          const data = await res.json();
-          if (data?.message) {
-            message = data.message;
-          }
-        } catch {
-          // Ignore
-        }
-        throw new Error(message);
+        // Better Auth returns English messages; user-facing copy stays French
+        // (docs/07 §Language). 422 is Better Auth's "user already exists".
+        throw new Error(
+          res.status === 422
+            ? 'Cette adresse e-mail est déjà utilisée.'
+            : 'Une erreur est survenue lors de l’inscription. Veuillez réessayer.',
+        );
       }
 
       return res.json();

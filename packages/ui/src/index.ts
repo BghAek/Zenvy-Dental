@@ -1,2 +1,7 @@
 export * from "./utils";
-// We'll export shadcn components from here once they are added
+export * from "./components/button";
+export * from "./components/input";
+export * from "./components/label";
+export * from "./components/card";
+export * from "./components/form";
+export * from "./components/alert";

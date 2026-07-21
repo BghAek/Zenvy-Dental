@@ -25,7 +25,7 @@ Status legend: each task gets `⬜ todo / 🟨 in PR / ✅ merged` — update th
 | S1-1 ✅ | Contracts: auth/clinic/trial + patients CRUD (`docs/api/auth.md`, `patients.md`; shared Zod schemas) | [C] Architect | S0-5, S0-6 | Merged contracts |
 | S1-2 ✅ | API: register → verify email → create clinic → trial starts (14d, no card); invite staff | [C] Backend | S1-1 | Flow passes integration tests |
 | S1-3 ✅ | API: patients module (CRUD, tags, E.164 normalize, soft delete, cursor pagination) | [C] Backend | S1-1 | Tenant-isolation + CRUD tests green |
-| S1-4 | Web: auth screens (register/login/verify/reset) FR copy, per design system | [A] Frontend | S1-1, S0-7 | Screens against real API |
+| S1-4 🟨 | Web: auth screens (register/login/verify/reset) FR copy, per design system | [A] Frontend | S1-1, S0-7 | Screens against real API |
 | S1-5 | Web: dashboard shell — sidebar nav, header, empty states, error boundary, loading patterns | [A] Frontend | S0-7 ✅ | Shell with placeholder routes |
 | S1-6 | Web: patients pages (list/search/detail/create/edit) | [A] Frontend | S1-3, S1-5 | Full CRUD in UI |
 | S1-7 | Landing: hero (3D, R3F) + value props + pricing page (€20 anchor / €399 + trial CTA) | [A] Frontend | S0-8 | Lighthouse ≥90 perf/SEO |

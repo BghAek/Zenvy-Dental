@@ -4,11 +4,12 @@ import { AppController } from './app.controller';
 import { RolesGuard } from './auth/rbac';
 import { ApiExceptionFilter } from './common/http';
 import { IdentityModule } from './identity/identity.module';
+import { PatientsModule } from './patients/patients.module';
 import { tenantContextMiddleware } from './tenancy/tenant-context.middleware';
 import { WhatsAppModule } from './whatsapp/whatsapp.module';
 
 @Module({
-  imports: [IdentityModule, WhatsAppModule],
+  imports: [IdentityModule, PatientsModule, WhatsAppModule],
   controllers: [AppController],
   providers: [
     { provide: APP_GUARD, useClass: RolesGuard },

@@ -5,8 +5,25 @@ import { RegisterPage } from './pages/auth/RegisterPage';
 import { LoginPage } from './pages/auth/LoginPage';
 import { VerifyEmailPage } from './pages/auth/VerifyEmailPage';
 import { ResetPasswordPage } from './pages/auth/ResetPasswordPage';
+import { DashboardLayout } from './components/layout/DashboardLayout';
+import { EmptyState, Button } from '@zenvy/ui';
+import { Settings } from 'lucide-react';
 
 const queryClient = new QueryClient();
+
+// Placeholder component for dashboard routes
+function PlaceholderPage({ title, description }: { title: string, description: string }) {
+  return (
+    <div className="bg-background rounded-lg border border-border">
+      <EmptyState 
+        icon={Settings} 
+        title={title} 
+        description={description} 
+        action={<Button>Nouvelle action</Button>}
+      />
+    </div>
+  );
+}
 
 export function App() {
   return (
@@ -19,19 +36,13 @@ export function App() {
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/sample" element={<SampleDesignPage />} />
           
-          <Route
-            path="/"
-            element={
-              <div className="p-8">
-                <h1 className="text-2xl font-bold">Dashboard</h1>
-                <p>Welcome to ZenvyDental Dashboard (Work in Progress)</p>
-                <div className="flex gap-4 mt-4">
-                  <a href="/login" className="text-primary hover:underline">Connexion</a>
-                  <a href="/register" className="text-primary hover:underline">S'inscrire</a>
-                </div>
-              </div>
-            }
-          />
+          <Route element={<DashboardLayout />}>
+            <Route path="/" element={<PlaceholderPage title="Tableau de bord" description="Bienvenue sur votre espace ZenvyDental." />} />
+            <Route path="/inbox" element={<PlaceholderPage title="Messages" description="Vos conversations avec les patients s'afficheront ici." />} />
+            <Route path="/patients" element={<PlaceholderPage title="Patients" description="Gérez votre base de patients." />} />
+            <Route path="/appointments" element={<PlaceholderPage title="Rendez-vous" description="Consultez et planifiez vos rendez-vous." />} />
+            <Route path="/settings" element={<PlaceholderPage title="Paramètres" description="Configurez votre clinique et l'assistant IA." />} />
+          </Route>
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>

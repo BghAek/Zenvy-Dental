@@ -22,6 +22,13 @@ Append-only. Every founder decision that shapes the product lands here with its 
 | D14 | Inbox real-time = 5s polling in v1 | SSE when demo proves polling insufficient |
 | D15 | Workflow: every task on its own branch → 5-section PR → founder merges | See 10-agent-workflow |
 
+## Decisions (2026-07-25 — S2-1 contracts)
+
+| # | Decision | Rationale / notes |
+|---|---|---|
+| D16 | Inbox lifecycle: **takeover → release → close**, all three manual; a new inbound message reopens a closed thread as `AI` | Staff must be able to hand a resolved thread back to the assistant; closing archives without losing history. Contract in docs/api/conversations.md |
+| D17 | An inbound WhatsApp message from an unknown number **creates a Patient** (`source=WHATSAPP_INBOUND`, name from the WhatsApp profile) and links the conversation | The AI gets patient context from message one and the clinic keeps a single list; junk contacts are soft-deleted like any other patient |
+
 ## Risk register
 
 | # | Risk | Severity | Mitigation / trigger to act |

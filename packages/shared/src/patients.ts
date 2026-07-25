@@ -32,6 +32,17 @@ export const patientSchema = z.object({
 });
 export type Patient = z.infer<typeof patientSchema>;
 
+// Patient as embedded in other resources (conversations, appointments): who they
+// are, how to reach them, and whether outbound is blocked. Nothing else travels.
+export const patientSummarySchema = patientSchema.pick({
+  id: true,
+  firstName: true,
+  lastName: true,
+  phone: true,
+  optOut: true,
+});
+export type PatientSummary = z.infer<typeof patientSummarySchema>;
+
 // POST /patients — source defaults to MANUAL, optOut to false, server-side.
 export const createPatientRequestSchema = z.object({
   firstName: nameSchema,

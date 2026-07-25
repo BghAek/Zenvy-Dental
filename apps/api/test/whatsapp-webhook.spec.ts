@@ -1,11 +1,14 @@
 import { createHmac } from 'node:crypto';
 import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { basePrisma } from '../src/prisma/client';
+import { InboundQueue } from '../src/whatsapp/inbound.queue';
 
-// S0-9 deliverable: the Meta verification handshake succeeds and a signed
-// test message reaches the (logged) webhook; everything unsigned is rejected.
+// S0-9: the Meta verification handshake succeeds and everything unsigned is
+// rejected. S2-2: a signed event is enqueued (never processed on the request
+// path), and a rejected one enqueues nothing. The queue is stubbed — Redis is
+// not part of this suite (nor of CI).
 const VERIFY_TOKEN = 'zenvy-test-verify-token';
 const APP_SECRET = 'zenvy-test-app-secret';
 process.env.META_VERIFY_TOKEN = VERIFY_TOKEN;
@@ -37,11 +40,13 @@ const payload = JSON.stringify({
 
 describe('whatsapp webhook', () => {
   let app: INestApplication;
+  let enqueue: ReturnType<typeof vi.spyOn>;
 
   beforeAll(async () => {
     const { createApp } = await import('../src/app');
     app = await createApp();
     await app.init();
+    enqueue = vi.spyOn(app.get(InboundQueue), 'add').mockResolvedValue(undefined);
   });
 
   afterAll(async () => {
@@ -75,22 +80,30 @@ describe('whatsapp webhook', () => {
       .expect(403);
   });
 
-  it('accepts a correctly signed event (200)', async () => {
+  it('accepts a correctly signed event (200) and enqueues one routed job', async () => {
+    enqueue.mockClear();
     await request(app.getHttpServer())
       .post(WEBHOOK_PATH)
       .set('Content-Type', 'application/json')
       .set('X-Hub-Signature-256', sign(payload))
       .send(payload)
       .expect(200);
+    expect(enqueue).toHaveBeenCalledTimes(1);
+    expect(enqueue.mock.calls[0][0]).toMatchObject({
+      phoneNumberId: '7794189252778687',
+      value: { messages: [{ from: '33612345678' }] },
+    });
   });
 
-  it('rejects a payload signed with the wrong secret (403)', async () => {
+  it('rejects a payload signed with the wrong secret (403) and enqueues nothing', async () => {
+    enqueue.mockClear();
     await request(app.getHttpServer())
       .post(WEBHOOK_PATH)
       .set('Content-Type', 'application/json')
       .set('X-Hub-Signature-256', sign(payload, 'attacker-secret'))
       .send(payload)
       .expect(403);
+    expect(enqueue).not.toHaveBeenCalled();
   });
 
   it('rejects a tampered payload (403)', async () => {

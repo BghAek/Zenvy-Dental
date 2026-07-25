@@ -3,13 +3,14 @@ import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { RolesGuard } from './auth/rbac';
 import { ApiExceptionFilter } from './common/http';
+import { ConversationsModule } from './conversations/conversations.module';
 import { IdentityModule } from './identity/identity.module';
 import { PatientsModule } from './patients/patients.module';
 import { tenantContextMiddleware } from './tenancy/tenant-context.middleware';
 import { WhatsAppModule } from './whatsapp/whatsapp.module';
 
 @Module({
-  imports: [IdentityModule, PatientsModule, WhatsAppModule],
+  imports: [IdentityModule, PatientsModule, WhatsAppModule, ConversationsModule],
   controllers: [AppController],
   providers: [
     { provide: APP_GUARD, useClass: RolesGuard },

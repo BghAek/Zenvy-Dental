@@ -2,7 +2,9 @@
 
 The single backend and source of truth: NestJS + Prisma + BullMQ. All external services (Meta WhatsApp, Stripe, OpenAI, DB) are reached only through this API — frontends never call them directly. Module map in `docs/01-architecture.md`; conventions in `docs/03-api-conventions.md`.
 
-Routes: `GET /health` (public, static ok — S0-2); Better Auth under `/api/v1/auth/*` (S0-5); everything else lives under `/api/v1`, requires a session cookie and an explicit `@Roles()` allow-list (deny by default). Tenant isolation is enforced centrally by the Prisma extension in `src/tenancy/` — business code imports the scoped `prisma` client from `src/prisma/client.ts`, never the base client.
+Routes: `GET /health` (public, static ok — S0-2); Better Auth under `/api/v1/auth/*` (S0-5); `POST /api/v1/webhooks/whatsapp` (public, signature-checked); everything else lives under `/api/v1`, requires a session cookie and an explicit `@Roles()` allow-list (deny by default). Tenant isolation is enforced centrally by the Prisma extension in `src/tenancy/` — business code imports the scoped `prisma` client from `src/prisma/client.ts`, never the base client.
+
+The process is also the BullMQ consumer: `startInboundWorker()` (`src/whatsapp/inbound.queue.ts`) is started from `main.ts` and drains the `whatsapp-inbound` queue, so `start:dev` needs `REDIS_URL`. The test suite boots the app without it — no Redis in CI.
 
 ## Commands
 

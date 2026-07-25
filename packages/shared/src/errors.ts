@@ -19,6 +19,16 @@ export const ERROR_CODES = {
   // Patients (docs/api/patients.md)
   PATIENT_NOT_FOUND: 404,
   PATIENT_PHONE_EXISTS: 409,
+  // Conversations (docs/api/conversations.md)
+  CONVERSATION_NOT_FOUND: 404,
+  // Staff must take the conversation over before replying by hand.
+  CONVERSATION_NOT_TAKEN_OVER: 422,
+  // Meta's 24h customer-service window closed — templates only (S3-1).
+  OUTSIDE_24H_WINDOW: 422,
+  // Patient sent STOP (or was opted out by hand): no outbound, ever.
+  PATIENT_OPTED_OUT: 422,
+  // Appointments (docs/api/appointments.md)
+  APPOINTMENT_NOT_FOUND: 404,
 } as const;
 
 export type ErrorCode = keyof typeof ERROR_CODES;

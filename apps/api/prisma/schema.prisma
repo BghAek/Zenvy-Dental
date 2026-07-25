@@ -274,6 +274,10 @@ model Conversation {
 
   messages Message[]
 
+  // One thread per contact per clinic — the inbound webhook upserts on it
+  // (docs/api/conversations.md §Webhook internals), so a CLOSED thread reopens
+  // instead of spawning a duplicate.
+  @@unique([clinicId, waContactPhone])
   @@index([clinicId, lastMessageAt])
   @@index([patientId])
 }

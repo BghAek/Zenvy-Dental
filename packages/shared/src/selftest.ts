@@ -4,17 +4,25 @@ import { z } from 'zod';
 import {
   ApiError,
   ERROR_CODES,
+  conversationSchema,
+  conversationSummarySchema,
   createApiClient,
+  createAppointmentRequestSchema,
   createClinicRequestSchema,
   createPatientRequestSchema,
+  listAppointmentsQuerySchema,
+  listConversationsQuerySchema,
   listPatientsQuerySchema,
   meResponseSchema,
+  messageSchema,
   normalizePhone,
   paginated,
   paginationQuerySchema,
   phoneE164Schema,
   phoneInputSchema,
   roleSchema,
+  sendMessageRequestSchema,
+  updateAppointmentRequestSchema,
   updatePatientRequestSchema,
 } from './index';
 
@@ -143,6 +151,63 @@ async function main() {
   check(listPatientsQuerySchema.parse({ search: ' Marie ' }).search === 'Marie', 'search trimmed');
   check(listPatientsQuerySchema.parse({ search: '', tag: '' }).search === undefined, 'cleared search box = unset');
   check(ERROR_CODES.PATIENT_NOT_FOUND === 404 && ERROR_CODES.INVITE_INVALID === 400, 'S1-1 error codes mapped');
+
+  // S2-1 contracts: conversations/messages, appointments.
+  check(listConversationsQuerySchema.parse({ status: '' }).status === undefined, 'cleared status filter = unset');
+  check(!listConversationsQuerySchema.safeParse({ status: 'PENDING' }).success, 'unknown conversation status rejected');
+  check(sendMessageRequestSchema.parse({ body: '  Bonjour  ' }).body === 'Bonjour', 'message body trimmed');
+  check(!sendMessageRequestSchema.safeParse({ body: '   ' }).success, 'blank message rejected');
+  check(!sendMessageRequestSchema.safeParse({ body: 'x'.repeat(4097) }).success, 'message over 4096 chars rejected');
+  check(
+    conversationSchema.safeParse({
+      id: 'c1',
+      patient: { id: 'p1', firstName: 'Marie', lastName: 'Curie', phone: '+33612345678', optOut: false },
+      waContactPhone: '+33612345678',
+      status: 'AI',
+      urgentFlag: false,
+      lastMessageAt: '2026-07-25T09:00:00.000Z',
+      lastMessagePreview: 'Bonjour, j’ai mal…',
+      lastMessageAuthor: 'PATIENT',
+      windowExpiresAt: '2026-07-26T09:00:00.000Z',
+      createdAt: '2026-07-25T09:00:00.000Z',
+      updatedAt: '2026-07-25T09:00:00.000Z',
+    }).success,
+    'conversation detail shape',
+  );
+  check(
+    conversationSummarySchema.safeParse({
+      id: 'c2',
+      patient: null,
+      waContactPhone: '+33712345678',
+      status: 'HUMAN',
+      urgentFlag: true,
+      lastMessageAt: null,
+      lastMessagePreview: null,
+      lastMessageAuthor: null,
+      createdAt: '2026-07-25T09:00:00.000Z',
+    }).success,
+    'conversation summary tolerates an unlinked, message-less thread',
+  );
+  check(!messageSchema.safeParse({ id: 'm1', conversationId: 'c1', direction: 'INBOUND' }).success, 'bad message direction rejected');
+
+  const appt = createAppointmentRequestSchema.parse({
+    patientId: 'p1',
+    startsAt: '2026-08-01T08:30:00.000Z',
+    durationMin: 30,
+    type: ' Détartrage ',
+  });
+  check(appt.status === 'SCHEDULED' && appt.type === 'Détartrage', 'appointment create: status default + type trimmed');
+  check(!createAppointmentRequestSchema.safeParse({ ...appt, durationMin: 4 }).success, 'duration under 5 min rejected');
+  check(!createAppointmentRequestSchema.safeParse({ ...appt, durationMin: 481 }).success, 'duration over 8h rejected');
+  check(!createAppointmentRequestSchema.safeParse({ ...appt, startsAt: '2026-08-01' }).success, 'date-only startsAt rejected');
+  check(updateAppointmentRequestSchema.safeParse({}).success, 'empty appointment patch allowed');
+  check(listAppointmentsQuerySchema.parse({ from: '', status: '' }).from === undefined, 'cleared appointment filters = unset');
+  check(
+    ERROR_CODES.CONVERSATION_NOT_TAKEN_OVER === 422 &&
+      ERROR_CODES.OUTSIDE_24H_WINDOW === 422 &&
+      ERROR_CODES.APPOINTMENT_NOT_FOUND === 404,
+    'S2-1 error codes mapped',
+  );
 
   console.log('selftest: all checks passed');
 }

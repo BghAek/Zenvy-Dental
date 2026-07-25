@@ -29,13 +29,13 @@ Status legend: each task gets `⬜ todo / 🟨 in PR / ✅ merged` — update th
 | S1-5 ✅ | Web: dashboard shell — sidebar nav, header, empty states, error boundary, loading patterns | [A] Frontend | S0-7 ✅ | Shell with placeholder routes |
 | S1-6 ✅ | Web: patients pages (list/search/detail/create/edit) | [A] Frontend | S1-3, S1-5 | Full CRUD in UI |
 | S1-7 ✅ | Landing: hero (3D, R3F) + value props + pricing page (€20 anchor / €399 + trial CTA) | [A] Frontend | S0-8 | Lighthouse ≥90 perf/SEO |
-| S1-8 🟨 | Review pass: Frontend Reviewer on S1-4/5/6/7 | [C] FE Reviewer | those PRs | Findings addressed pre-merge |
+| S1-8 ✅ | Review pass: Frontend Reviewer on S1-4/5/6/7 | [C] FE Reviewer | those PRs | Findings addressed pre-merge |
 
 ## Sprint 2 — Conversations (the product's heart: WhatsApp in, AI out)
 
 | ID | Task | Owner | Depends | Deliverable |
 |---|---|---|---|---|
-| S2-1 | Contracts: conversations/messages/appointments + webhook internals | [C] Architect | S1 merged | `docs/api/conversations.md`, `appointments.md` |
+| S2-1 🟨 | Contracts: conversations/messages/appointments + webhook internals | [C] Architect | S1 merged | `docs/api/conversations.md`, `appointments.md` |
 | S2-2 | API: WhatsApp webhook (signature, fast-200, BullMQ ingest), conversation/message persistence, tenant routing by phone_number_id | [C] Backend | S2-1, S0-9 | Real test-number message → DB row |
 | S2-3 | API: AI engine v1 — context builder, LlmService (OpenAI), FR system prompt, emergency classifier, guardrails, handoff state machine + eval set | [C] Backend + QA | S2-2 | Evals green; test conversation works end-to-end |
 | S2-4 | API: appointments module + lifecycle events emitting ScheduledMessage rows | [C] Backend | S2-1 | Booking creates reminder rows |

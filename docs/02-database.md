@@ -20,7 +20,7 @@ A tenant-scoped query without a clinic context must throw, never silently return
 | `User` | ✔ (nullable for SUPER_ADMIN) | Better Auth user; role: `SUPER_ADMIN` \| `CLINIC_OWNER` \| `CLINIC_STAFF` |
 | `Patient` | ✔ | firstName, lastName, phone (E.164, unique per clinic), tags, notes, source (`manual` \| `whatsapp_inbound`), optOut flag |
 | `Appointment` | ✔ | patientId, startsAt, durationMin, type (free text), status (`scheduled/confirmed/cancelled/no_show/done`), reminder state |
-| `Conversation` | ✔ | patientId (nullable until matched), waContactPhone, status (`ai` \| `human` \| `closed`), urgentFlag, lastMessageAt |
+| `Conversation` | ✔ | patientId (nullable until matched), waContactPhone (unique per clinic — one thread per contact, the webhook's upsert key), status (`ai` \| `human` \| `closed`), urgentFlag, lastMessageAt |
 | `Message` | ✔ | conversationId, direction (`in/out`), author (`patient/ai/staff/system`), body, waMessageId, template used, delivery status |
 | `WhatsAppAccount` | ✔ | phoneNumberId (globally unique — the tenant-routing key), wabaId, displayNumber, verified status, tokens (encrypted) |
 | `Subscription` | ✔ | stripeCustomerId, stripeSubscriptionId, plan (`premium`), status (`trialing/active/past_due/canceled`), trialEndsAt |
@@ -39,7 +39,7 @@ A tenant-scoped query without a clinic context must throw, never silently return
 - Money: integer cents, never floats.
 - Enums live in `packages/shared` and mirror Prisma enums 1:1.
 - Migrations: `prisma migrate` only — never `db push` beyond local experiments. Every migration is reviewed in its PR.
-- Indexes minimum: every FK, `(clinicId, phone)` unique on Patient, `phoneNumberId` unique, `(clinicId, lastMessageAt)` on Conversation, `(status, sendAt)` on ScheduledMessage, `(clinicId, createdAt)` on ErrorLog.
+- Indexes minimum: every FK, `(clinicId, phone)` unique on Patient, `phoneNumberId` unique, `(clinicId, waContactPhone)` unique + `(clinicId, lastMessageAt)` on Conversation, `(status, sendAt)` on ScheduledMessage, `(clinicId, createdAt)` on ErrorLog.
 
 ## Seeding
 

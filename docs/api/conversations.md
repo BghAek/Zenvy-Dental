@@ -48,7 +48,10 @@ Staff reply, sent through the Graph API and stored as `direction=OUT, author=STA
 - **422** `CONVERSATION_NOT_TAKEN_OVER` — status is not `HUMAN`. Sending never implicitly takes over: the AI must be stopped deliberately, or two authors race on the same thread.
 - **422** `OUTSIDE_24H_WINDOW` — `windowExpiresAt` is null or past.
 - **422** `PATIENT_OPTED_OUT` — the linked patient opted out; opt-out blocks *all* outbound including manual (`docs/05-ai-policy.md`).
+- **422** `DOMAIN_RULE_VIOLATION` — the clinic has no `WhatsAppAccount` yet, so there is no number to send from (`docs/api/meta-setup.md`).
 - **404** `CONVERSATION_NOT_FOUND`.
+
+The row is written only after Meta accepts the send, and it bumps `lastMessageAt` so the thread rises in the inbox.
 
 ### POST /conversations/:id/takeover
 
@@ -59,7 +62,7 @@ Staff reply, sent through the Graph API and stored as `direction=OUT, author=STA
 
 ### POST /conversations/:id/release
 
-`HUMAN` → `AI` — « Rendre la main à l'IA ». Writes `AuditLog` (`action=conversation.release`). The AI answers the *next* inbound message; releasing does not generate a reply.
+`HUMAN` (or `CLOSED`) → `AI` — « Rendre la main à l'IA ». Writes `AuditLog` (`action=conversation.release`). The AI answers the *next* inbound message; releasing does not generate a reply.
 
 - **200** → `conversationSchema`. Idempotent on an already-`AI` thread.
 - **404** `CONVERSATION_NOT_FOUND`.
@@ -102,7 +105,7 @@ Public endpoint, no session: `POST /api/v1/webhooks/whatsapp`. Setup and the GET
 6. **Non-text messages** (`image`, `audio`, `document`, `location`, …) — stored with a French placeholder body (« [Message vocal reçu] », « [Image reçue] », …) and the conversation is forced to `HUMAN`. The v1 assistant is text-only; a human reads what it cannot.
 7. **Hand off to the AI engine** (S2-3) only when status is `AI`.
 
-**Abuse bound:** patient auto-creation (step 3) is writeable by anyone who can message the clinic's number, so the worker caps it per clinic per hour; over the cap, the conversation and message are still stored but the patient stays unlinked and an `ErrorLog` at `WARN` is written. Number and enforcement point are S2-2's call, reviewed in S2-7. <!-- ponytail: fixed hourly cap, revisit if a real clinic hits it -->
+**Abuse bound:** patient auto-creation (step 3) is writeable by anyone who can message the clinic's number, so the worker caps it at **20 new patients per clinic per rolling hour** (`PATIENT_CREATION_CAP_PER_HOUR`, enforced in the worker before the `Patient` insert); over the cap, the conversation and message are still stored but the patient stays unlinked and an `ErrorLog` at `WARN` is written. Reviewed in S2-7. <!-- ponytail: fixed hourly cap, revisit if a real clinic hits it -->
 
 **Status events** (`value.statuses[]`): map `sent|delivered|read|failed` onto `Message.deliveryStatus` by `waMessageId`; unknown ids are ignored (a receipt for a message we never stored). `failed` also writes an `ErrorLog` at `WARN` with Meta's error code.
 

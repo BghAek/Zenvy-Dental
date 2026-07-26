@@ -49,6 +49,14 @@ Appointment writes emit `ScheduledMessage` rows; the actual sending is S3-2. Row
 
 Rules applied to every row creation: skip if `sendAt` is in the past, and skip if the patient has `optOut` (opt-out blocks all outbound, `docs/05-ai-policy.md`). `templateName` is set to the catalogue name (`reminder_24h_fr`, `reminder_2h_fr`, `followup_fr`) — the templates themselves are registered with Meta in S3-1, so until then the rows exist but nothing sends.
 
+Three consequences of applying those rules on *every* write (S2-4, `appointments/reminders.ts`):
+
+- A recompute that pushes `sendAt` into the past cancels the pending row instead of leaving it to fire late — moving an appointment to « dans une heure » cancels its 24h reminder, it does not send one.
+- An opted-out patient cancels the appointment's pending rows, not just future ones: the block is retroactive, so opting out after booking silences the reminders already queued.
+- A status that comes back (`CANCELLED` → `CONFIRMED`) re-arms the reminders as new rows; the cancelled ones stay as the trail of what was called off.
+
+Rows already `SENT` are never re-timed, cancelled or duplicated — the send happened, rewriting its record would lie.
+
 ## Tests required (S2-4)
 
 Cross-tenant test (clinic A reading/mutating clinic B's appointment → 404) is mandatory per `docs/04-security.md`, plus: create → two reminder rows at the right offsets; reschedule → pending rows follow; cancel → pending rows cancelled; `DONE` → follow-up row; opted-out patient → no rows; past `startsAt` → no rows.

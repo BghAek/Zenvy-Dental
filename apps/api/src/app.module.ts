@@ -1,6 +1,7 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
+import { AppointmentsModule } from './appointments/appointments.module';
 import { RolesGuard } from './auth/rbac';
 import { ApiExceptionFilter } from './common/http';
 import { ConversationsModule } from './conversations/conversations.module';
@@ -10,7 +11,13 @@ import { tenantContextMiddleware } from './tenancy/tenant-context.middleware';
 import { WhatsAppModule } from './whatsapp/whatsapp.module';
 
 @Module({
-  imports: [IdentityModule, PatientsModule, WhatsAppModule, ConversationsModule],
+  imports: [
+    IdentityModule,
+    PatientsModule,
+    WhatsAppModule,
+    ConversationsModule,
+    AppointmentsModule,
+  ],
   controllers: [AppController],
   providers: [
     { provide: APP_GUARD, useClass: RolesGuard },

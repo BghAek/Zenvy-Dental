@@ -29,6 +29,13 @@ Append-only. Every founder decision that shapes the product lands here with its 
 | D16 | Inbox lifecycle: **takeover → release → close**, all three manual; a new inbound message reopens a closed thread as `AI` | Staff must be able to hand a resolved thread back to the assistant; closing archives without losing history. Contract in docs/api/conversations.md |
 | D17 | An inbound WhatsApp message from an unknown number **creates a Patient** (`source=WHATSAPP_INBOUND`, name from the WhatsApp profile) and links the conversation | The AI gets patient context from message one and the clinic keeps a single list; junk contacts are soft-deleted like any other patient |
 
+## Decisions (2026-07-26 — S2-3 AI engine)
+
+| # | Decision | Rationale / notes |
+|---|---|---|
+| D18 | The AI eval set runs in **two halves**: deterministic cases (keyword classifier, output guardrails, prompt assembly) on every PR, and the same French corpus against the live model only when `OPENAI_API_KEY` is present | Honours « failing eval = failing CI » without billing every PR (R4) or turning an OpenAI outage into a red build on unrelated work. The live half is run locally before any PR touching the `ai` module (docs/13-local-dev.md §Evals) |
+| D19 | On handoff, guardrail failure or engine error, the assistant sends **one fixed French sentence** and the thread flips to `HUMAN` — the model's own text is discarded | A reply that failed a safety check must not be partially salvaged, and one constant keeps what the patient sees predictable |
+
 ## Risk register
 
 | # | Risk | Severity | Mitigation / trigger to act |

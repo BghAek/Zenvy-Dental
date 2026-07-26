@@ -103,7 +103,7 @@ Public endpoint, no session: `POST /api/v1/webhooks/whatsapp`. Setup and the GET
 4. **Conversation upsert** — on `(clinicId, waContactPhone)`; `CLOSED` reopens as `AI`; set `lastMessageAt`.
 5. **Message insert** — `direction=IN, author=PATIENT, body`, `deliveryStatus=null` (inbound has none).
 6. **Non-text messages** (`image`, `audio`, `document`, `location`, …) — stored with a French placeholder body (« [Message vocal reçu] », « [Image reçue] », …) and the conversation is forced to `HUMAN`. The v1 assistant is text-only; a human reads what it cannot.
-7. **Hand off to the AI engine** (S2-3) only when status is `AI`.
+7. **Hand off to the AI engine** (S2-3, `apps/api/src/ai/engine.ts`) only when status is `AI`. The engine answers inline in the same job and is silent on `HUMAN`/`CLOSED`, on an opted-out patient, and outside the 24h window. Its reply is stored `direction=OUT, author=AI, deliveryStatus=PENDING`; an emergency sets `urgentFlag` and a handoff (requested, guardrail failure, or engine error) sets `status=HUMAN`. Full behaviour in `docs/05-ai-policy.md`.
 
 **Abuse bound:** patient auto-creation (step 3) is writeable by anyone who can message the clinic's number, so the worker caps it at **20 new patients per clinic per rolling hour** (`PATIENT_CREATION_CAP_PER_HOUR`, enforced in the worker before the `Patient` insert); over the cap, the conversation and message are still stored but the patient stays unlinked and an `ErrorLog` at `WARN` is written. Reviewed in S2-7. <!-- ponytail: fixed hourly cap, revisit if a real clinic hits it -->
 
@@ -114,3 +114,5 @@ Public endpoint, no session: `POST /api/v1/webhooks/whatsapp`. Setup and the GET
 ## Tests required (S2-2 / S2-3)
 
 Cross-tenant test (clinic A reading/acting on clinic B's conversation → 404) is mandatory per `docs/04-security.md`, plus: invalid signature → 403 with nothing enqueued; duplicate `waMessageId` → one message row; unknown `phoneNumberId` → no writes; unknown number → patient created and linked; send outside the 24h window → 422; send on an `AI` thread → 422.
+
+For the engine (`test/ai-engine.spec.ts`, model and Graph API stubbed): disclosure on first contact; emergency → `urgentFlag` + `HUMAN` with no generation call; handoff and guardrail failure → the handoff sentence + `HUMAN`; three consecutive non-understandings → handoff; silence on `HUMAN`, opt-out and stale window; provider failure → `HUMAN` and no message row; and the engine run under clinic A cannot touch clinic B's thread.

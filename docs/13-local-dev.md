@@ -75,6 +75,17 @@ DATABASE_URL=postgresql://postgres:zenvy@localhost:5433/zenvy pnpm --filter @zen
 
 CI runs the same suites against a Postgres service container.
 
+### Evals (S2-3)
+
+`test/ai-evals.spec.ts` has two halves (decision D18). The deterministic half runs above with everything else. The live half — the same French corpus against the real model — is skipped unless a key is present, so run it by hand before any PR touching `apps/api/src/ai/`:
+
+```bash
+OPENAI_API_KEY=sk-... DATABASE_URL=postgresql://postgres:zenvy@localhost:5433/zenvy \
+  pnpm --filter @zenvy/api exec vitest run test/ai-evals.spec.ts
+```
+
+Each case costs two `gpt-4o-mini` calls at most. A failure names the case id from `apps/api/src/ai/evals/cases.ts`.
+
 ## Troubleshooting
 
 - 502 from nginx right after `up` → the API container is still booting; retry in a few seconds.

@@ -41,6 +41,26 @@ Meta webhook → verify signature → 200 fast → enqueue (BullMQ)
 - Patient reply to any outbound message opens the 24h window → conversation continues under the engine flow above.
 - Opt-out honored absolutely: patient `optOut` blocks all outbound; « STOP » in any message sets it.
 
+## Implementation (S2-3, `apps/api/src/ai/`)
+
+| File | Holds |
+|---|---|
+| `llm.ts` | The only place the API talks to the provider. Raw `fetch` on Chat Completions with a strict `json_schema`; model from `OPENAI_MODEL` (default `gpt-4o-mini`), temperature 0.2, 15s timeout. No key → the engine stays silent and logs, rather than handing every thread to a human. |
+| `prompt.ts` | The French system prompt (the six absolute rules above), the context builder, and the delimited untrusted block. `Clinic.aiConfig` is dumped key/value until its contract lands in S3-4. |
+| `guardrails.ts` | Deterministic post-checks — the prompt asks, these enforce. Emergency keyword fast path, then `TOO_LONG` / `NOT_FRENCH` / `MEDICAL_ADVICE` / `INVENTED_FACT` on every generated reply. |
+| `engine.ts` | The flow above, entered from the inbound worker inside `runAsClinic`. Never throws: a failure ends with the thread `HUMAN` and an `ErrorLog`, because the worker's `waMessageId` dedup means a job retry would skip the reply entirely. |
+
+Two LLM calls per inbound message at most: the emergency classifier (skipped when a keyword already matched) and one generation call returning `{ reply, handoff, understood }`.
+
+**Fixed patient-visible strings** (policy, not clinic-tunable copy): the disclosure prepended to the assistant's first message in a thread, the handoff sentence, the clarification request, and the emergency escalation (clinic phone + 15). Handoff, guardrail failure and engine error all send the **same** handoff sentence and flip the thread to `HUMAN` — the model's own text is discarded (D19).
+
+**Non-understanding counter:** the clarification request is a fixed sentence, so three consecutive misses are counted by reading the last two assistant messages back — no extra column.
+
+**Escalation notifies the clinic** through `Conversation.urgentFlag` + `status=HUMAN`, which the inbox surfaces within its 5s poll. <!-- ponytail: inbox flag only, add push/email when staff ask for it -->
+
 ## Quality evaluation
 
-A small French eval set (`apps/api/src/ai/evals/`) covering: emergency phrasing variants, price-invention traps, prompt injections, handoff triggers, tone. Run on every PR touching the `ai` module. Failing eval = failing CI.
+A small French eval set (`apps/api/src/ai/evals/cases.ts`) covering: emergency phrasing variants, price-invention traps, prompt injections, handoff triggers, tone. One corpus, two runners (`apps/api/test/ai-evals.spec.ts`), per founder decision D18:
+
+- **Deterministic half** — keyword classifier, output guardrails, prompt assembly. Runs on every PR, costs nothing, cannot flake. Failing eval = failing CI.
+- **Live half** — the same French cases against the real model. Skipped unless `OPENAI_API_KEY` is set, so CI is never billed and never red on a provider outage. Run it locally before any PR touching the `ai` module (`docs/13-local-dev.md` §Evals).

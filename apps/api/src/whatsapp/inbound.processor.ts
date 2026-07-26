@@ -1,5 +1,6 @@
 import { Logger } from '@nestjs/common';
 import { normalizePhone, phoneE164Schema } from '@zenvy/shared';
+import { replyToInbound } from '../ai/engine';
 import type { MessageDeliveryStatus } from '../generated/prisma/enums';
 import { basePrisma, prisma } from '../prisma/client';
 import { runAsClinic } from '../tenancy/tenant-context';
@@ -169,7 +170,8 @@ async function storeInbound(
     },
   });
 
-  // 6. Hand off to the AI engine when status is AI — lands with S2-3.
+  // 6. Hand the thread to the AI engine (S2-3); it is silent on HUMAN/CLOSED.
+  if (conversation.status === 'AI') await replyToInbound(conversation.id);
 }
 
 async function resolvePatient(

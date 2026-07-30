@@ -13,6 +13,7 @@ import { PatientListPage } from './pages/patients/PatientListPage';
 import { PatientDetailPage } from './pages/patients/PatientDetailPage';
 import { PatientCreatePage } from './pages/patients/PatientCreatePage';
 import { PatientEditPage } from './pages/patients/PatientEditPage';
+import { InboxPage } from './pages/inbox/InboxPage';
 
 const queryClient = new QueryClient();
 
@@ -44,7 +45,7 @@ export function App() {
           <Route element={<RequireAuth />}>
             <Route element={<DashboardLayout />}>
             <Route path="/" element={<PlaceholderPage title="Tableau de bord" description="Bienvenue sur votre espace ZenvyDental." />} />
-            <Route path="/inbox" element={<PlaceholderPage title="Messages" description="Vos conversations avec les patients s'afficheront ici." />} />
+            <Route path="/inbox" element={<InboxPage />} />
             <Route path="/patients" element={<PatientListPage />} />
             <Route path="/patients/new" element={<PatientCreatePage />} />
             <Route path="/patients/:id" element={<PatientDetailPage />} />

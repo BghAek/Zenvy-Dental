@@ -39,7 +39,7 @@ Status legend: each task gets `⬜ todo / 🟨 in PR / ✅ merged` — update th
 | S2-2 ✅ | API: WhatsApp webhook (signature, fast-200, BullMQ ingest), conversation/message persistence, tenant routing by phone_number_id | [C] Backend | S2-1, S0-9 | Real test-number message → DB row |
 | S2-3 ✅ | API: AI engine v1 — context builder, LlmService (OpenAI), FR system prompt, emergency classifier, guardrails, handoff state machine + eval set | [C] Backend + QA | S2-2 | Evals green; test conversation works end-to-end |
 | S2-4 🟨 | API: appointments module + lifecycle events emitting ScheduledMessage rows | [C] Backend | S2-1 | Booking creates reminder rows |
-| S2-5 | Web: inbox — thread list, conversation view, send box, AI/human status, takeover button, urgent flag, 5s polling | [A] Frontend | S2-1, S1-5 | Live chat with test number from UI |
+| S2-5 🟨 | Web: inbox — thread list, conversation view, send box, AI/human status, takeover button, urgent flag, 5s polling | [A] Frontend | S2-1, S1-5 | Live chat with test number from UI |
 | S2-6 | Web: appointments pages (list/calendar-lite/create/edit, reminder status) | [A] Frontend | S2-1, S1-5 | CRUD + reminder visibility |
 | S2-7 | Security review: webhook + AI input path (prompt injection, signature, rate limits) | [C] Security | S2-2, S2-3 | /security-review findings fixed |
 

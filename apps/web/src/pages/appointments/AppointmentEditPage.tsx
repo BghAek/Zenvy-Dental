@@ -30,7 +30,12 @@ export function AppointmentEditPage() {
 
   const handleSubmit = async (data: CreateAppointmentRequest) => {
     // Only send allowed update fields
-    const { patientId: _, ...updateData } = data;
+    const updateData = {
+      startsAt: data.startsAt,
+      durationMin: data.durationMin,
+      type: data.type,
+      status: data.status,
+    };
     await updateAppointment(updateData);
     navigate(`/appointments/${id}`);
   };

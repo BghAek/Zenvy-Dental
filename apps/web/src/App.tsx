@@ -14,7 +14,10 @@ import { PatientDetailPage } from './pages/patients/PatientDetailPage';
 import { PatientCreatePage } from './pages/patients/PatientCreatePage';
 import { PatientEditPage } from './pages/patients/PatientEditPage';
 import { InboxPage } from './pages/inbox/InboxPage';
-
+import { AppointmentListPage } from './pages/appointments/AppointmentListPage';
+import { AppointmentCreatePage } from './pages/appointments/AppointmentCreatePage';
+import { AppointmentDetailPage } from './pages/appointments/AppointmentDetailPage';
+import { AppointmentEditPage } from './pages/appointments/AppointmentEditPage';
 const queryClient = new QueryClient();
 
 // Placeholder component for dashboard routes
@@ -50,7 +53,10 @@ export function App() {
             <Route path="/patients/new" element={<PatientCreatePage />} />
             <Route path="/patients/:id" element={<PatientDetailPage />} />
             <Route path="/patients/:id/edit" element={<PatientEditPage />} />
-            <Route path="/appointments" element={<PlaceholderPage title="Rendez-vous" description="Consultez et planifiez vos rendez-vous." />} />
+            <Route path="/appointments" element={<AppointmentListPage />} />
+            <Route path="/appointments/new" element={<AppointmentCreatePage />} />
+            <Route path="/appointments/:id" element={<AppointmentDetailPage />} />
+            <Route path="/appointments/:id/edit" element={<AppointmentEditPage />} />
             <Route path="/settings" element={<PlaceholderPage title="Paramètres" description="Configurez votre clinique et l'assistant IA." />} />
             </Route>
           </Route>

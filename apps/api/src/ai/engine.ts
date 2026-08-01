@@ -21,6 +21,15 @@ import {
 
 const logger = new Logger('AiEngine');
 const WINDOW_MS = 24 * 60 * 60 * 1000;
+const HOUR_MS = 60 * 60 * 1000;
+
+// Anyone who can message the clinic's number can make us call the LLM, so cap
+// what one clinic's assistant answers per hour. Past it the thread goes to a
+// human: the message is still stored and visible, we just stop paying to answer
+// it. The emergency keyword path is deliberately exempt (R6 — a false negative
+// costs a patient, and it spends no LLM call).
+// ponytail: flat reply cap, replace with the per-clinic token budget in S3-6.
+export const AI_REPLIES_PER_HOUR = 60;
 
 interface ReplyVerdict {
   reply: string;
@@ -117,8 +126,21 @@ async function run(conversationId: string): Promise<void> {
 
   // Emergency classifier runs BEFORE generation and bypasses it entirely; the
   // keyword hit spares an LLM call on the clearest cases.
+  const keywordUrgent = emergencyKeywordHit(latest.body);
+
+  // Checked between the free keyword pass and the first paid call: a flood
+  // cannot run up the bill, and cannot silence the emergency path either.
+  if (!keywordUrgent && (await overReplyCap())) {
+    await warn(conversationId, 'AI hourly reply cap reached: thread handed to a human');
+    await prisma.conversation.update({
+      where: { id: conversationId },
+      data: { status: 'HUMAN' },
+    });
+    return;
+  }
+
   const urgent =
-    emergencyKeywordHit(latest.body) ||
+    keywordUrgent ||
     (await llm.complete<{ urgent: boolean }>(emergencyMessages(latest.body), EMERGENCY_SCHEMA, 16))
       .urgent;
   if (urgent) {
@@ -180,6 +202,14 @@ async function run(conversationId: string): Promise<void> {
   }
 
   await deliver(conversation, verdict.reply, { handoff: false });
+}
+
+/** `prisma` is tenant-scoped, so this counts the routed clinic's own replies. */
+async function overReplyCap(): Promise<boolean> {
+  const sentLastHour = await prisma.message.count({
+    where: { direction: 'OUT', author: 'AI', createdAt: { gte: new Date(Date.now() - HOUR_MS) } },
+  });
+  return sentLastHour >= AI_REPLIES_PER_HOUR;
 }
 
 /** True when the two previous assistant messages were both clarification

@@ -36,6 +36,13 @@ Append-only. Every founder decision that shapes the product lands here with its 
 | D18 | The AI eval set runs in **two halves**: deterministic cases (keyword classifier, output guardrails, prompt assembly) on every PR, and the same French corpus against the live model only when `OPENAI_API_KEY` is present | Honours « failing eval = failing CI » without billing every PR (R4) or turning an OpenAI outage into a red build on unrelated work. The live half is run locally before any PR touching the `ai` module (docs/13-local-dev.md §Evals) |
 | D19 | On handoff, guardrail failure or engine error, the assistant sends **one fixed French sentence** and the thread flips to `HUMAN` — the model's own text is discarded | A reply that failed a safety check must not be partially salvaged, and one constant keeps what the patient sees predictable |
 
+## Decisions (2026-08-01 — S2-7 security review)
+
+| # | Decision | Rationale / notes |
+|---|---|---|
+| D20 | Rate limiting uses **`express-rate-limit` middleware**, not the `@nestjs/throttler` named in docs/04, and its store stays **in-memory** for v1 | Better Auth is mounted with `app.use()` and terminates the response itself, so a Nest `APP_GUARD` never runs on `/auth/*` — the brute-force path the limit exists for. One middleware covers auth, webhooks and everything else; the Nest guard would have needed a second mechanism beside it. The store follows the deployment: one API process (docs/01), so per-process counters *are* the global counters — Redis-backed storage lands with the second instance |
+| D21 | The assistant answers at most **60 messages per clinic per hour**; past that the thread flips to `HUMAN` unanswered, and the **emergency keyword path is exempt** | Anyone who knows the clinic's WhatsApp number can make us call OpenAI, so the AI input path needs a ceiling before real numbers go live (R4). The cap sits between the free keyword classifier and the first paid call, so a flood cannot suppress an emergency escalation (R6). Superseded by the per-clinic token budget in S3-6 |
+
 ## Risk register
 
 | # | Risk | Severity | Mitigation / trigger to act |

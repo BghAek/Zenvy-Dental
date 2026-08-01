@@ -4,6 +4,7 @@ import {
   Controller,
   ForbiddenException,
   Get,
+  Header,
   HttpCode,
   Logger,
   Post,
@@ -49,6 +50,9 @@ export class WhatsAppWebhookController {
 
   @Public()
   @Get()
+  // The challenge is echoed back verbatim; text/plain so a browser hitting this
+  // URL cannot be made to render it as HTML (Express defaults strings to HTML).
+  @Header('Content-Type', 'text/plain; charset=utf-8')
   verify(
     @Query('hub.mode') mode?: string,
     @Query('hub.verify_token') token?: string,

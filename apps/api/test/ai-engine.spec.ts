@@ -14,7 +14,7 @@ vi.mock('../src/whatsapp/graph', () => ({
 }));
 vi.mock('../src/ai/llm', () => ({ isConfigured: () => true, complete: vi.fn() }));
 
-import { CLARIFY, HANDOFF, replyToInbound } from '../src/ai/engine';
+import { AI_REPLIES_PER_HOUR, CLARIFY, HANDOFF, replyToInbound } from '../src/ai/engine';
 import { complete as llmComplete } from '../src/ai/llm';
 import { sendText as graphSendText } from '../src/whatsapp/graph';
 
@@ -34,6 +34,8 @@ describe('ai engine (S2-3)', () => {
   const startedAt = new Date();
   let clinicA: { id: string };
   let clinicB: { id: string };
+  /** Its own clinic: the cap test fills an hour's quota and would starve the rest. */
+  let clinicCapped: { id: string };
 
   const messagesOf = (conversationId: string) =>
     basePrisma.message.findMany({ where: { conversationId } });
@@ -80,8 +82,8 @@ describe('ai engine (S2-3)', () => {
   }
 
   beforeAll(async () => {
-    [clinicA, clinicB] = await Promise.all(
-      (['a', 'b'] as const).map((label) =>
+    [clinicA, clinicB, clinicCapped] = await Promise.all(
+      (['a', 'b', 'capped'] as const).map((label) =>
         basePrisma.clinic.create({
           data: {
             name: `Cabinet ${label} ${run}`,
@@ -93,7 +95,7 @@ describe('ai engine (S2-3)', () => {
       ),
     );
     await basePrisma.whatsAppAccount.createMany({
-      data: [clinicA, clinicB].map((clinic, i) => ({
+      data: [clinicA, clinicB, clinicCapped].map((clinic, i) => ({
         clinicId: clinic.id,
         phoneNumberId: `ai-pnid-${i}-${run}`,
         wabaId: `waba-${i}`,
@@ -108,8 +110,12 @@ describe('ai engine (S2-3)', () => {
   });
 
   afterAll(async () => {
-    await basePrisma.clinic.deleteMany({ where: { id: { in: [clinicA.id, clinicB.id] } } });
-    await basePrisma.errorLog.deleteMany({ where: { module: 'ai', createdAt: { gte: startedAt } } });
+    await basePrisma.clinic.deleteMany({
+      where: { id: { in: [clinicA.id, clinicB.id, clinicCapped.id] } },
+    });
+    await basePrisma.errorLog.deleteMany({
+      where: { module: 'ai', createdAt: { gte: startedAt } },
+    });
     await basePrisma.$disconnect();
   });
 
@@ -257,6 +263,42 @@ describe('ai engine (S2-3)', () => {
     expect(await messagesOf(conversation.id)).toHaveLength(1);
     const after = await basePrisma.conversation.findUnique({ where: { id: conversation.id } });
     expect(after?.status).toBe('HUMAN');
+  });
+
+  it('stops answering past the hourly cap, but still escalates an emergency', async () => {
+    // An hour's quota already spent on another thread of the same clinic (S2-7:
+    // anyone who can message the number can otherwise run up the LLM bill).
+    const spent = await seedThread(clinicCapped.id, 'Bonjour');
+    await basePrisma.message.createMany({
+      data: Array.from({ length: AI_REPLIES_PER_HOUR }, (_, i) => ({
+        clinicId: clinicCapped.id,
+        conversationId: spent.id,
+        direction: 'OUT' as const,
+        author: 'AI' as const,
+        body: `Réponse ${i}`,
+        waMessageId: `wamid.cap-${i}-${run}`,
+      })),
+    });
+
+    const flood = await seedThread(clinicCapped.id, 'Vous ouvrez à quelle heure ?');
+    await runAsClinic(clinicCapped.id, () => replyToInbound(flood.id));
+
+    // Not a single paid call, and the clinic sees the thread in its inbox.
+    expect(complete).not.toHaveBeenCalled();
+    expect(sendText).not.toHaveBeenCalled();
+    expect(await messagesOf(flood.id)).toHaveLength(1);
+    expect((await basePrisma.conversation.findUnique({ where: { id: flood.id } }))?.status).toBe(
+      'HUMAN',
+    );
+
+    // The keyword path spends nothing, so the cap must not silence it (R6).
+    const urgent = await seedThread(clinicCapped.id, 'J’ai une douleur insupportable');
+    await runAsClinic(clinicCapped.id, () => replyToInbound(urgent.id));
+
+    expect(await basePrisma.conversation.findUnique({ where: { id: urgent.id } })).toMatchObject({
+      status: 'HUMAN',
+      urgentFlag: true,
+    });
   });
 
   it('writes only under its own clinic (cross-tenant)', async () => {

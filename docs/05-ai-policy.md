@@ -33,6 +33,7 @@ Meta webhook → verify signature → 200 fast → enqueue (BullMQ)
 - Model: start `gpt-4o-mini` for cost, `gpt-4o` class where quality demands; provider isolated behind one `LlmService` so models/providers swap freely. Temperature low. Response length capped.
 - 24h rule: free-form replies only within Meta's 24h customer-service window; outside it, **approved templates only** (enforced in `whatsapp` module, not trusted to the LLM).
 - Cost guard: per-clinic daily token budget with alert to owner portal when exceeded. <!-- ponytail: fixed daily cap, per-plan budgets when >1 pricing tier is live -->
+- Reply cap (S2-7, D21): **60 AI replies per clinic per hour**. Checked after the free emergency keyword pass and before the first paid call, so a message flood costs nothing and still cannot silence an escalation. Over the cap the thread flips to `HUMAN` with an `ErrorLog` — the message is stored and visible, just not answered. Replaced by the token budget above in S3-6.
 
 ## Outbound automation (reminders / follow-ups)
 

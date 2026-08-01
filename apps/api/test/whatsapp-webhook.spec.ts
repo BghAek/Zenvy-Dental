@@ -64,6 +64,8 @@ describe('whatsapp webhook', () => {
       })
       .expect(200);
     expect(res.text).toBe('1158201444');
+    // Echoed verbatim, so it must never be served as HTML (S2-7).
+    expect(res.headers['content-type']).toMatch(/^text\/plain/);
   });
 
   it('rejects the handshake on a wrong verify token (403)', async () => {

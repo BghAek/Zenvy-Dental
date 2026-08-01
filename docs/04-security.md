@@ -28,12 +28,15 @@ Guards: `@Roles()` decorator + global tenant guard. Deny by default — a route 
 
 - All input through shared Zod schemas; strings trimmed, unknown keys stripped; HTML never rendered from user/patient content (React default escaping; no `dangerouslySetInnerHTML` without an ADR).
 - Patient-supplied WhatsApp text is untrusted: sanitized before storage-display, and treated as **data, not instructions** when passed to the LLM (prompt-injection defense, see 05-ai-policy).
+- Anything echoed back to a caller verbatim is served as `text/plain` — the Meta verification handshake returns `hub.challenge` unchanged, and Express would otherwise label a string response `text/html`.
+- Unauthenticated paths that cost money or rows are capped: patient auto-creation (20/h per clinic, `whatsapp/inbound.processor.ts`) and AI replies (60/h per clinic, D21).
 - File uploads: out of scope v1 (no upload endpoints exist).
 
 ## Platform hardening
 
-- `helmet` on the API; strict CORS (exact origins for the three frontends).
-- Rate limiting: `@nestjs/throttler` backed by Redis — tight on `/auth/*` (brute force) and `/webhooks/*` (flood), generous on authenticated CRUD.
+- `helmet` on the API (`apps/api/src/app.ts`). CORS is an **allowlist from `CORS_ORIGINS`, empty by default**: production serves the SPAs and `/api` from the same origin (nginx), so no allow header is sent and cross-origin browsers fail closed. Set it only for split-origin setups (local `VITE_API_URL`, an `api.` subdomain).
+- `app.set('trust proxy', 1)` — one nginx hop (docs/01 §Deploy). Without it every request keys on the proxy's IP and per-IP limits become global.
+- Rate limiting: `express-rate-limit` middleware — `/auth/*` **20 requests / 15 min per IP** (brute force), `/webhooks/*` **600 / min per IP** (Meta batches and retries), nothing on authenticated CRUD. Express middleware rather than `@nestjs/throttler` because Better Auth is mounted as a raw handler and never reaches Nest's guard pipeline (D20). In-memory store while the API is a single process; move to the Redis store when it is not.
 - Webhook signatures verified against the exact raw body before any payload use (Meta HMAC, Stripe signature) — the framework's JSON parser may run first, but nothing acts on a payload until its signature checks out. Reject on mismatch, log with correlation ID.
 - Secrets: `.env` only, never committed; `.env.example` documents every variable. Meta/Stripe/OpenAI keys live only on the API. WhatsApp tokens stored encrypted at rest (AES-256-GCM, key in env).
 - Dependencies: `pnpm audit` in CI; Renovate/Dependabot post-v1.

@@ -43,6 +43,14 @@ Append-only. Every founder decision that shapes the product lands here with its 
 | D20 | Rate limiting uses **`express-rate-limit` middleware**, not the `@nestjs/throttler` named in docs/04, and its store stays **in-memory** for v1 | Better Auth is mounted with `app.use()` and terminates the response itself, so a Nest `APP_GUARD` never runs on `/auth/*` — the brute-force path the limit exists for. One middleware covers auth, webhooks and everything else; the Nest guard would have needed a second mechanism beside it. The store follows the deployment: one API process (docs/01), so per-process counters *are* the global counters — Redis-backed storage lands with the second instance |
 | D21 | The assistant answers at most **60 messages per clinic per hour**; past that the thread flips to `HUMAN` unanswered, and the **emergency keyword path is exempt** | Anyone who knows the clinic's WhatsApp number can make us call OpenAI, so the AI input path needs a ceiling before real numbers go live (R4). The cap sits between the free keyword classifier and the first paid call, so a flood cannot suppress an emergency escalation (R6). Superseded by the per-clinic token budget in S3-6 |
 
+## Decisions (2026-08-02 — S3-1 template catalogue)
+
+| # | Decision | Rationale / notes |
+|---|---|---|
+| D22 | Reminder templates are **plain text ending in « répondez à ce message »** — no « Confirmer » / « Annuler » quick-reply buttons | A written reply opens the 24h window and lands in the AI engine, which already reads « oui je confirme » and « je dois annuler » — so free text costs nothing to support, while buttons need `type: button` payload handling in the inbound worker, an engine branch and automatic status flips. Buttons are a later template version if confirmation rates ask for them |
+| D23 | The catalogue lives **in code** (`apps/api/src/whatsapp/templates.ts`) and is pushed to Meta by `pnpm --filter @zenvy/api templates:register`, not typed into the Template Manager UI | Templates register per WhatsApp Business Account, so the console path would be repeated by hand for every clinic that onboards. One file also keeps the names `reminders.ts` writes and the bodies Meta approves from drifting apart |
+| D24 | Exactly **three** templates in v1 — the two reminders and the J+1 follow-up. No generic « the clinic wants to reach you » re-engagement template | Staff messaging a patient after the 24h window is a real gap, but closing it needs inbox UI and an endpoint that S3 does not schedule; the inbox keeps refusing those sends (docs/api/conversations.md) until that work is planned |
+
 ## Risk register
 
 | # | Risk | Severity | Mitigation / trigger to act |

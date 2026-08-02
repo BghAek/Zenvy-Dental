@@ -41,13 +41,13 @@ Status legend: each task gets `⬜ todo / 🟨 in PR / ✅ merged` — update th
 | S2-4 ✅ | API: appointments module + lifecycle events emitting ScheduledMessage rows | [C] Backend | S2-1 | Booking creates reminder rows |
 | S2-5 ✅ | Web: inbox — thread list, conversation view, send box, AI/human status, takeover button, urgent flag, 5s polling | [A] Frontend | S2-1, S1-5 | Live chat with test number from UI |
 | S2-6 ✅ | Web: appointments pages (list/calendar-lite/create/edit, reminder status) | [A] Frontend | S2-1, S1-5 | CRUD + reminder visibility |
-| S2-7 🟨 | Security review: webhook + AI input path (prompt injection, signature, rate limits) | [C] Security | S2-2, S2-3 | /security-review findings fixed → `docs/reviews/s2-7-security-review.md` |
+| S2-7 ✅ | Security review: webhook + AI input path (prompt injection, signature, rate limits) | [C] Security | S2-2, S2-3 | /security-review findings fixed → `docs/reviews/s2-7-security-review.md` |
 
 ## Sprint 3 — Automation & money (Premium becomes real)
 
 | ID | Task | Owner | Depends | Deliverable |
 |---|---|---|---|---|
-| S3-1 | WhatsApp template catalog (FR reminder/follow-up templates) registered on test number + `whatsapp-templates.md` | [C] Backend | S2 merged | Templates approved & documented |
+| S3-1 🟨 | WhatsApp template catalog (FR reminder/follow-up templates) registered on test number + `whatsapp-templates.md` | [C] Backend | S2 merged | Templates approved & documented |
 | S3-2 | API: BullMQ senders — reminder_24h/2h, follow-up J+1, 24h-window enforcement, opt-out (STOP), retry/backoff | [C] Backend | S3-1, S2-4 | Scheduled sends fire correctly in test |
 | S3-3 | API: billing — Stripe test checkout, subscription webhooks (idempotent), trial→active→past_due states, feature gating middleware | [C] Backend | S1-2 | State transitions tested |
 | S3-4 | Web: settings pages — clinic profile, AI config (tone/services/prices/hours/FAQ), staff, subscription page (plan, trial countdown, checkout) | [A] Frontend | S3-3 contracts | Config round-trips to AI behavior |

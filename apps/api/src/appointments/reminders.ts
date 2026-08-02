@@ -1,11 +1,12 @@
 import type { Appointment, ScheduledMessage } from '../generated/prisma/client';
 import type { AppointmentStatus, ScheduledMessageKind } from '../generated/prisma/enums';
 import { prisma } from '../prisma/client';
+import { TEMPLATES } from '../whatsapp/templates';
 
 // S2-4 reminder lifecycle (docs/api/appointments.md §Reminder lifecycle).
-// Appointment writes emit ScheduledMessage rows; the sending itself is S3-2, so
-// until the templates are registered with Meta (S3-1) the rows exist and nothing
-// leaves. Deleting an appointment cascades its rows away (schema.prisma).
+// Appointment writes emit ScheduledMessage rows naming a template from the S3-1
+// catalogue; the sending itself is S3-2, so the rows exist and nothing leaves.
+// Deleting an appointment cascades its rows away (schema.prisma).
 
 const HOUR_MS = 60 * 60 * 1000;
 
@@ -22,13 +23,6 @@ const PLAN: Record<AppointmentStatus, { kind: ScheduledMessageKind; offsetMs: nu
   DONE: [{ kind: 'FOLLOWUP', offsetMs: 24 * HOUR_MS }],
   CANCELLED: [],
   NO_SHOW: [],
-};
-
-/** Catalogue names registered with Meta in S3-1. */
-const TEMPLATE: Partial<Record<ScheduledMessageKind, string>> = {
-  REMINDER_24H: 'reminder_24h_fr',
-  REMINDER_2H: 'reminder_2h_fr',
-  FOLLOWUP: 'followup_fr',
 };
 
 /**
@@ -80,7 +74,7 @@ export async function syncReminders(
         patientId: appointment.patientId,
         appointmentId: appointment.id,
         kind,
-        templateName: TEMPLATE[kind]!,
+        templateName: TEMPLATES[kind]!.name,
         sendAt,
       },
     });

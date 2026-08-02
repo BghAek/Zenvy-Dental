@@ -16,7 +16,7 @@ One conversation per `(clinicId, waContactPhone)` — enforced by a unique index
 
 `urgentFlag` is set by the emergency classifier (S2-3) and cleared by `takeover` or `close` — acting on the thread *is* the acknowledgement, so there is no separate "clear flag" endpoint.
 
-`windowExpiresAt` (detail only) = last **inbound** message + 24h, or `null` if the contact has never written. Past it, Meta forbids free-form replies (`docs/05-ai-policy.md` §24h rule) and the API refuses the send; approved templates land in S3-1.
+`windowExpiresAt` (detail only) = last **inbound** message + 24h, or `null` if the contact has never written. Past it, Meta forbids free-form replies (`docs/05-ai-policy.md` §24h rule) and the API refuses the send. The S3-1 catalogue (`docs/api/whatsapp-templates.md`) covers reminders and follow-ups only, so there is deliberately no template for staff to reopen a closed window from the inbox (D24) — the refusal stands.
 
 ## Endpoints
 

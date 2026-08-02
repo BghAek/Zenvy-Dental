@@ -38,7 +38,7 @@ Meta webhook → verify signature → 200 fast → enqueue (BullMQ)
 ## Outbound automation (reminders / follow-ups)
 
 - `ScheduledMessage` rows created by appointment lifecycle events (booked → reminder_24h + reminder_2h; done → followup J+1 configurable).
-- BullMQ delayed jobs send via **pre-approved French template messages** (template catalog documented in `docs/api/whatsapp-templates.md` as they're registered with Meta).
+- BullMQ delayed jobs send via **pre-approved French template messages** — the catalogue (three UTILITY templates, their bodies and variables) is `docs/api/whatsapp-templates.md`; the LLM never writes an outbound reminder.
 - Patient reply to any outbound message opens the 24h window → conversation continues under the engine flow above.
 - Opt-out honored absolutely: patient `optOut` blocks all outbound; « STOP » in any message sets it.
 

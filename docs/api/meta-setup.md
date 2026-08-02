@@ -28,6 +28,7 @@ routing, persistence — documented in `docs/api/conversations.md`.
 | `META_VERIFY_TOKEN` | Self-chosen (`openssl rand -hex 16`); entered verbatim in the Meta webhook config. |
 | `META_APP_SECRET` | App Dashboard → App settings → Basic → App secret. |
 | `META_ACCESS_TOKEN` | WhatsApp → API Setup → temporary access token (24h in dev mode). Outbound sends only. |
+| `META_WABA_ID` | WhatsApp → API Setup → WhatsApp Business Account ID. Only the S3-1 template registration script reads it (`docs/api/whatsapp-templates.md`). |
 | `REDIS_URL` | The compose `redis` service — the inbound worker runs inside the API process and needs it. |
 
 Per-clinic tokens (`WhatsAppAccount.accessTokenEnc`, encrypted at rest) replace

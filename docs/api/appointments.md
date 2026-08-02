@@ -47,7 +47,7 @@ Appointment writes emit `ScheduledMessage` rows; the actual sending is S3-2. Row
 | `status` → `DONE` | `FOLLOWUP` at `startsAt + 24h` (J+1) |
 | Deleted | rows cascade-deleted |
 
-Rules applied to every row creation: skip if `sendAt` is in the past, and skip if the patient has `optOut` (opt-out blocks all outbound, `docs/05-ai-policy.md`). `templateName` is set to the catalogue name (`reminder_24h_fr`, `reminder_2h_fr`, `followup_fr`) — the templates themselves are registered with Meta in S3-1, so until then the rows exist but nothing sends.
+Rules applied to every row creation: skip if `sendAt` is in the past, and skip if the patient has `optOut` (opt-out blocks all outbound, `docs/05-ai-policy.md`). `templateName` is set to the catalogue name (`reminder_24h_fr`, `reminder_2h_fr`, `followup_fr`) — the bodies and their variables are in `docs/api/whatsapp-templates.md` (S3-1). The sender is S3-2, so the rows exist and nothing leaves yet.
 
 Three consequences of applying those rules on *every* write (S2-4, `appointments/reminders.ts`):
 

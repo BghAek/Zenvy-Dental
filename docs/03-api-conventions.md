@@ -29,12 +29,12 @@ Error (always this shape, from the global exception filter):
 - `code`: stable SCREAMING_SNAKE machine code, enumerated in `packages/shared`.
 - `message`: **French**, human-friendly, safe to render directly in the UI.
 - `correlationId`: matches the structured log + ErrorLog row (see 06-observability).
-- HTTP status: 400 validation, 401 unauthenticated, 403 forbidden/tenant, 404, 409 conflict, 422 domain rule, 429 rate limit, 500 unexpected (message is generic; details only in logs).
+- HTTP status: 400 validation, 401 unauthenticated, **402 subscription inactive** (trial over, payment failed, cancelled — S3-3 gating), 403 forbidden/tenant, 404, 409 conflict, 422 domain rule, 429 rate limit, 500 unexpected (message is generic; details only in logs), 503 dependency unconfigured/unavailable.
 
 ## Webhooks (inbound to us)
 
 - `POST /webhooks/whatsapp` — Meta signature (`X-Hub-Signature-256`) verified before parsing; respond 200 fast, process async via BullMQ.
-- `POST /webhooks/stripe` — Stripe signature verified; idempotent by event id (store processed event ids).
+- `POST /webhooks/stripe` — Stripe signature verified; idempotent by event id (`StripeEvent` ledger). The only writer of subscription state — see `docs/api/billing.md`.
 
 ## Frontend data layer
 

@@ -13,6 +13,8 @@ const NON_TENANT_MODELS = new Set([
   'Verification',
   // No clinicId column; scoped through its SupportThread.
   'SupportMessage',
+  // Stripe webhook idempotency ledger — keyed by Stripe's event id (S3-3).
+  'StripeEvent',
 ]);
 
 // Clinic is the tenant itself: no clinicId column, so it is scoped on id.

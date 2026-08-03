@@ -86,6 +86,18 @@ OPENAI_API_KEY=sk-... DATABASE_URL=postgresql://postgres:zenvy@localhost:5433/ze
 
 Each case costs two `gpt-4o-mini` calls at most. A failure names the case id from `apps/api/src/ai/evals/cases.ts`.
 
+### Stripe webhook (S3-3)
+
+Stripe cannot reach `localhost`, so the CLI forwards for you. The printed `whsec_…` is the `STRIPE_WEBHOOK_SECRET` for that session:
+
+```bash
+stripe login
+stripe listen --forward-to localhost:3001/api/v1/webhooks/stripe
+stripe trigger customer.subscription.updated
+```
+
+Test cards: `4242 4242 4242 4242` succeeds, `4000 0000 0000 0341` fails after attaching (drives the clinic to `PAST_DUE`). Everything stays in Stripe **test mode** (decision D5). `test/billing.spec.ts` needs none of this — it signs events locally.
+
 ## Troubleshooting
 
 - 502 from nginx right after `up` → the API container is still booting; retry in a few seconds.

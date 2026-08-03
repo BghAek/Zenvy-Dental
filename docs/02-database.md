@@ -29,6 +29,7 @@ A tenant-scoped query without a clinic context must throw, never silently return
 | `OnboardingRequest` | ✔ | manual WhatsApp-onboarding queue item: status, notes, scheduledCallAt |
 | `SupportThread` / `SupportMessage` | ✔ | clinic ↔ owner support chat |
 | `ErrorLog` | ✔ (nullable) | correlationId, clinicId?, userId?, module, severity, message, stack, context JSON, createdAt |
+| `StripeEvent` | — (not tenant-scoped) | Stripe webhook idempotency ledger: Stripe's event id as PK, type, createdAt — a redelivered event inserts nothing and is skipped (S3-3) |
 | `AuditLog` | ✔ (nullable) | actor, action, entity, entityId, diff JSON — **written from day one, viewer UI is v2** |
 
 ## Conventions

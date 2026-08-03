@@ -37,13 +37,14 @@ Guards: `@Roles()` decorator + global tenant guard. Deny by default — a route 
 - `helmet` on the API (`apps/api/src/app.ts`). CORS is an **allowlist from `CORS_ORIGINS`, empty by default**: production serves the SPAs and `/api` from the same origin (nginx), so no allow header is sent and cross-origin browsers fail closed. Set it only for split-origin setups (local `VITE_API_URL`, an `api.` subdomain).
 - `app.set('trust proxy', 1)` — one nginx hop (docs/01 §Deploy). Without it every request keys on the proxy's IP and per-IP limits become global.
 - Rate limiting: `express-rate-limit` middleware — `/auth/*` **20 requests / 15 min per IP** (brute force), `/webhooks/*` **600 / min per IP** (Meta batches and retries), nothing on authenticated CRUD. Express middleware rather than `@nestjs/throttler` because Better Auth is mounted as a raw handler and never reaches Nest's guard pipeline (D20). In-memory store while the API is a single process; move to the Redis store when it is not.
+- Feature gating: `SubscriptionGuard` runs after `RolesGuard` on every authenticated route and answers **402** unless the clinic's subscription is `ACTIVE` or an unexpired `TRIALING` (docs/api/billing.md §Feature gating). Deny by default like the role guard — a new module is gated unless it opts out with `@NoSubscription()`. Billing endpoints are `CLINIC_OWNER`-only and exempt, so a past-due clinic can still pay.
 - Webhook signatures verified against the exact raw body before any payload use (Meta HMAC, Stripe signature) — the framework's JSON parser may run first, but nothing acts on a payload until its signature checks out. Reject on mismatch, log with correlation ID.
 - Secrets: `.env` only, never committed; `.env.example` documents every variable. Meta/Stripe/OpenAI keys live only on the API. WhatsApp tokens stored encrypted at rest (AES-256-GCM, key in env).
 - Dependencies: `pnpm audit` in CI; Renovate/Dependabot post-v1.
 
 ## Audit & accountability
 
-- `AuditLog` written for: auth events, role changes, billing changes, clinic settings changes, human takeover of AI conversations, data deletions. Viewer UI is v2; the data starts accumulating in v1.
+- `AuditLog` written for: auth events, role changes, billing changes (`subscription.status_changed`, actor null — Stripe, not a user), clinic settings changes, human takeover of AI conversations, data deletions. Viewer UI is v2; the data starts accumulating in v1.
 
 ## Known accepted risks
 

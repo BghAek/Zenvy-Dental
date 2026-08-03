@@ -3,6 +3,8 @@ import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppointmentsModule } from './appointments/appointments.module';
 import { RolesGuard } from './auth/rbac';
+import { BillingModule } from './billing/billing.module';
+import { SubscriptionGuard } from './billing/subscription.guard';
 import { ApiExceptionFilter } from './common/http';
 import { ConversationsModule } from './conversations/conversations.module';
 import { IdentityModule } from './identity/identity.module';
@@ -17,10 +19,14 @@ import { WhatsAppModule } from './whatsapp/whatsapp.module';
     WhatsAppModule,
     ConversationsModule,
     AppointmentsModule,
+    BillingModule,
   ],
   controllers: [AppController],
   providers: [
     { provide: APP_GUARD, useClass: RolesGuard },
+    // Registration order is execution order: identity/role first, then « does
+    // this clinic still pay? » (docs/api/billing.md §Feature gating).
+    { provide: APP_GUARD, useClass: SubscriptionGuard },
     // Every error leaves as the French envelope (docs/03-api-conventions.md).
     { provide: APP_FILTER, useClass: ApiExceptionFilter },
   ],

@@ -79,7 +79,9 @@ describe('appointments (S2-4)', () => {
     [clinicA, clinicB] = await Promise.all(
       (['a', 'b'] as const).map((l) =>
         basePrisma.clinic.create({
-          data: { name: `Cabinet RDV ${l} ${run}`, slug: `cabinet-rdv-${l}-${run}` },
+          data: { name: `Cabinet RDV ${l} ${run}`, slug: `cabinet-rdv-${l}-${run}`,
+            subscription: { create: { trialEndsAt: new Date(Date.now() + 14 * 24 * 3600 * 1000) } },
+          },
         }),
       ),
     );

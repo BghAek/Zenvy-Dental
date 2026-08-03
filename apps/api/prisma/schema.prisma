@@ -332,6 +332,15 @@ model Subscription {
   updatedAt            DateTime           @updatedAt
 }
 
+// Webhook idempotency ledger (S3-3): Stripe's own event id is the primary key,
+// so a redelivered event inserts nothing and is skipped. Not tenant-scoped —
+// it is keyed by Stripe's id, not by clinic.
+model StripeEvent {
+  id        String   @id
+  type      String
+  createdAt DateTime @default(now())
+}
+
 model ScheduledMessage {
   id            String                 @id @default(cuid())
   clinicId      String

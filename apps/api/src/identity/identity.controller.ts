@@ -13,6 +13,7 @@ import {
 } from '@zenvy/shared';
 import type { Request } from 'express';
 import { Roles } from '../auth/rbac';
+import { NoSubscription } from '../billing/subscription.guard';
 import { ApiException, ZodValidationPipe } from '../common/http';
 import type { Clinic, StaffInvite, Subscription } from '../generated/prisma/client';
 import { Role } from '../generated/prisma/enums';
@@ -97,6 +98,8 @@ const requireNoClinic = (user: SessionUser): void => {
 
 @Controller()
 export class IdentityController {
+  // Exempt from gating: the dashboard reads /me to learn it is locked out.
+  @NoSubscription()
   @Roles(Role.SUPER_ADMIN, Role.CLINIC_OWNER, Role.CLINIC_STAFF)
   @Get('me')
   async me(@Req() req: Request): Promise<MeResponse> {
@@ -123,6 +126,8 @@ export class IdentityController {
   }
 
   // SUPER_ADMIN deliberately excluded: the founder never owns a clinic.
+  // Exempt from gating: this route is what creates the trial in the first place.
+  @NoSubscription()
   @Roles(Role.CLINIC_OWNER, Role.CLINIC_STAFF)
   @Post('clinics')
   async createClinic(
@@ -216,6 +221,8 @@ export class IdentityController {
     return toInviteDto(invite);
   }
 
+  // Exempt from gating: the caller has no clinic yet, so no subscription.
+  @NoSubscription()
   @Roles(Role.CLINIC_OWNER, Role.CLINIC_STAFF)
   @Post('staff-invites/accept')
   @HttpCode(200)

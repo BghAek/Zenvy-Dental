@@ -10,7 +10,8 @@ import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
 import { Role } from '../generated/prisma/enums';
 
-const PUBLIC_KEY = 'zenvy:public';
+// Exported: the subscription guard (S3-3) must skip the same routes.
+export const PUBLIC_KEY = 'zenvy:public';
 const ROLES_KEY = 'zenvy:roles';
 
 /** Route reachable without a session — health, webhooks, nothing else. */

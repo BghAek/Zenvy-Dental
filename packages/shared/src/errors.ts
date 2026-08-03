@@ -29,6 +29,14 @@ export const ERROR_CODES = {
   PATIENT_OPTED_OUT: 422,
   // Appointments (docs/api/appointments.md)
   APPOINTMENT_NOT_FOUND: 404,
+  // Billing (docs/api/billing.md)
+  // Trial over, payment failed, or subscription cancelled — the clinic must
+  // pay before the feature routes answer again.
+  SUBSCRIPTION_INACTIVE: 402,
+  // Portal asked for before any checkout ever completed: no Stripe customer.
+  BILLING_NO_CUSTOMER: 409,
+  // Stripe keys absent from the environment — a deployment gap, not user error.
+  BILLING_UNAVAILABLE: 503,
 } as const;
 
 export type ErrorCode = keyof typeof ERROR_CODES;

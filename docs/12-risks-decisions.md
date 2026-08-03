@@ -73,6 +73,10 @@ Append-only. Every founder decision that shapes the product lands here with its 
 | R8 | EU AI Act / chatbot disclosure obligations evolve | Low | Assistant self-discloses (D10); revisit compliance at first paying customer |
 | R9 | Solo-founder burnout / scope creep | Medium | Sprint plan is the scope contract; anything new goes to v2 backlog unless founder swaps it for something |
 
+| D28 | `PAST_DUE` **blocks the product immediately** — no extra grace window of ours | Stripe's smart retries already take several days of failed charges before flipping a subscription to `past_due`, so that delay *is* the grace period; a second one on our side would just be an unmetered free month. The way back is always open: billing routes are exempt from gating, so the owner can update the card from the portal while everything else answers 402 |
+| D29 | Subscription state is written by the **Stripe webhook only** — our endpoints never optimistically set a status, and the idempotency ledger records an event id **after** it is processed | One writer means Stripe is always the source of truth and a failed checkout cannot leave us believing a clinic pays. Recording after the work keeps Stripe's retry meaningful: marking the event done first would let a mid-processing crash silence the redelivery for good, and re-applying an event is harmless because every effect is an idempotent state assignment |
+| D30 | The official **`stripe` Node SDK** is a justified dependency, unlike the hand-rolled Meta client | Webhook signature verification is security-critical crypto with a replay window (`constructEvent`), and Checkout/Portal parameters are deeply nested form encoding. The Meta client stayed hand-written because it posts flat JSON with a bearer token — a genuinely different amount of work |
+
 ## How to add entries
 
 Founder states a decision in any session → agent appends it here (same PR as the work it affects) with date and one-line rationale. Risks get re-severity-scored when circumstances change; resolved risks move to a `## Retired` section (create when first needed).

@@ -36,7 +36,9 @@ export async function seedTwoClinics(): Promise<TwoClinics> {
   const [clinicA, clinicB] = await Promise.all(
     (['a', 'b'] as const).map((label) =>
       basePrisma.clinic.create({
-        data: { name: `Test Clinic ${label} ${run}`, slug: `test-clinic-${label}-${run}` },
+        data: { name: `Test Clinic ${label} ${run}`, slug: `test-clinic-${label}-${run}`,
+          subscription: { create: { trialEndsAt: new Date(Date.now() + 14 * 24 * 3600 * 1000) } },
+        },
       }),
     ),
   );

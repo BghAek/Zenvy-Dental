@@ -62,7 +62,7 @@ export function ProfileSettings() {
         timezone: data.timezone,
       });
       setSuccess(true);
-    } catch (err) {
+    } catch {
       setError("Une erreur est survenue lors de l'enregistrement. Veuillez réessayer.");
     }
   };

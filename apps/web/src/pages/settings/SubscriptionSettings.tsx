@@ -61,7 +61,7 @@ export function SubscriptionSettings() {
       } else {
         throw new Error('No redirection URL returned');
       }
-    } catch (err) {
+    } catch {
       setErrorMessage("Impossible de démarrer la session de paiement. Veuillez réessayer.");
     }
   };
@@ -75,7 +75,7 @@ export function SubscriptionSettings() {
       } else {
         throw new Error('No portal URL returned');
       }
-    } catch (err) {
+    } catch {
       setErrorMessage("Impossible d'ouvrir le portail de facturation. Veuillez réessayer.");
     }
   };

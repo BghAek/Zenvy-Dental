@@ -96,11 +96,12 @@ export function useUpdateClinic() {
       phone?: string | null;
       address?: string | null;
       timezone?: string;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       aiConfig?: any;
     }) => {
       // Get current stored clinic or default
       const stored = localStorage.getItem('zenvy_mock_clinic');
-      let current = stored ? JSON.parse(stored) : {};
+      const current = stored ? JSON.parse(stored) : {};
       
       const updated = {
         ...current,
@@ -203,6 +204,7 @@ export function useInviteStaff() {
 }
 
 // Helper to wrap promise with timeout/resolve
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const newPromise = (callback: (resolve: (value: any) => void) => void) => {
   return new Promise(callback);
 };

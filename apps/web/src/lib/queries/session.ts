@@ -68,7 +68,7 @@ export function useMe() {
           };
           const initial = { ...data.clinic, aiConfig: defaultAiConfig };
           localStorage.setItem('zenvy_mock_clinic', JSON.stringify(initial));
-          data.clinic = initial as any;
+          data.clinic = initial as unknown as typeof data.clinic;
         }
       }
 

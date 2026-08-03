@@ -37,6 +37,7 @@ export function AiSettings() {
   const [error, setError] = useState<string | null>(null);
 
   const clinic = me?.clinic;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const aiConfig = (clinic as any)?.aiConfig || {};
 
   const [services, setServices] = useState<string[]>(
@@ -89,7 +90,7 @@ export function AiSettings() {
         },
       });
       setSuccess(true);
-    } catch (err) {
+    } catch {
       setError("Une erreur est survenue lors de l'enregistrement de la configuration IA.");
     }
   };

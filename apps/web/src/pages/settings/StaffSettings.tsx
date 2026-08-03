@@ -63,6 +63,7 @@ export function StaffSettings() {
       await inviteStaff.mutateAsync(data.email);
       setInviteSuccess(true);
       reset();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       if (err.message === 'USER_ALREADY_IN_CLINIC') {
         setInviteError('Cet utilisateur appartient déjà à un cabinet.');
@@ -78,7 +79,7 @@ export function StaffSettings() {
     if (confirm(`Êtes-vous sûr de vouloir retirer ${name} de l'équipe ?`)) {
       try {
         await removeStaff.mutateAsync(id);
-      } catch (err) {
+      } catch {
         alert("Impossible de retirer ce membre.");
       }
     }
@@ -88,7 +89,7 @@ export function StaffSettings() {
     if (confirm(`Êtes-vous sûr de vouloir annuler l'invitation envoyée à ${email} ?`)) {
       try {
         await revokeInvite.mutateAsync(id);
-      } catch (err) {
+      } catch {
         alert("Impossible d'annuler l'invitation.");
       }
     }

@@ -50,7 +50,7 @@ Status legend: each task gets `⬜ todo / 🟨 in PR / ✅ merged` — update th
 | S3-1 ✅ | WhatsApp template catalog (FR reminder/follow-up templates) registered on test number + `whatsapp-templates.md` | [C] Backend | S2 merged | Templates approved & documented |
 | S3-2 ✅ | API: BullMQ senders — reminder_24h/2h, follow-up J+1, 24h-window enforcement, opt-out (STOP), retry/backoff | [C] Backend | S3-1, S2-4 | Scheduled sends fire correctly in test |
 | S3-3 🟨 | API: billing — Stripe test checkout, subscription webhooks (idempotent), trial→active→past_due states, feature gating middleware | [C] Backend | S1-2 | State transitions tested |
-| S3-4 | Web: settings pages — clinic profile, AI config (tone/services/prices/hours/FAQ), staff, subscription page (plan, trial countdown, checkout) | [A] Frontend | S3-3 contracts | Config round-trips to AI behavior |
+| S3-4 🟨 | Web: settings pages — clinic profile, AI config (tone/services/prices/hours/FAQ), staff, subscription page (plan, trial countdown, checkout) | [A] Frontend | S3-3 contracts | Config round-trips to AI behavior |
 | S3-5 | Web: onboarding wizard — post-signup steps (clinic info → WhatsApp "we connect it for you" request → AI config), fallback booking for manual onboarding | [A] Frontend | S1-2 | New signup lands in owner queue |
 | S3-6 | AI hardening: expand evals (injection, anger, edge FR dialects), token budget guard, cost logging | [C] QA | S2-3 | Eval suite ≥95% pass in CI |
 | S3-7 | Security review: billing + gating | [C] Security | S3-3 | Findings fixed |

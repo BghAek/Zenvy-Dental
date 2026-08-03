@@ -53,6 +53,12 @@ const DELIVERY: Record<string, MessageDeliveryStatus> = {
   failed: 'FAILED',
 };
 
+// « STOP » anywhere in a message opts the patient out (docs/05-ai-policy.md).
+// Word-bounded, so « stopper » / « stoppé » in a normal sentence does not
+// silence a patient by accident. Erring towards honouring it: an unwanted
+// opt-out is one toggle in the patient sheet, an ignored STOP is a complaint.
+const OPT_OUT = /\bstop\b/i;
+
 const FALLBACK_NAME = 'Contact WhatsApp';
 // Anyone who can message the clinic's number can create rows here, so cap it.
 // ponytail: fixed hourly cap, revisit if a real clinic hits it (S2-7 reviews).
@@ -170,8 +176,31 @@ async function storeInbound(
     },
   });
 
-  // 6. Hand the thread to the AI engine (S2-3); it is silent on HUMAN/CLOSED.
+  // 6. « STOP » — the message is on record above, and nothing else leaves this
+  // clinic for that patient, ever (docs/05-ai-policy.md §Outbound automation).
+  if (isText && OPT_OUT.test(body)) {
+    await optOut(clinicId, patientId, phone);
+    return;
+  }
+
+  // 7. Hand the thread to the AI engine (S2-3); it is silent on HUMAN/CLOSED.
   if (conversation.status === 'AI') await replyToInbound(conversation.id);
+}
+
+/** Opt-out is retroactive: the pending reminders already queued are cancelled
+ *  with it, the same rule appointment writes apply (appointments/reminders.ts). */
+async function optOut(clinicId: string, patientId: string | null, phone: string): Promise<void> {
+  if (!patientId) {
+    // No patient row to carry the flag (auto-creation cap). Not answering is
+    // still the honoured half; a human reads the thread in the inbox.
+    await warn(clinicId, 'STOP received on a conversation with no linked patient', { phone });
+    return;
+  }
+  await prisma.patient.update({ where: { id: patientId }, data: { optOut: true } });
+  await prisma.scheduledMessage.updateMany({
+    where: { patientId, status: 'PENDING' },
+    data: { status: 'CANCELLED' },
+  });
 }
 
 async function resolvePatient(

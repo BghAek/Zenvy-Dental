@@ -51,6 +51,14 @@ Append-only. Every founder decision that shapes the product lands here with its 
 | D23 | The catalogue lives **in code** (`apps/api/src/whatsapp/templates.ts`) and is pushed to Meta by `pnpm --filter @zenvy/api templates:register`, not typed into the Template Manager UI | Templates register per WhatsApp Business Account, so the console path would be repeated by hand for every clinic that onboards. One file also keeps the names `reminders.ts` writes and the bodies Meta approves from drifting apart |
 | D24 | Exactly **three** templates in v1 — the two reminders and the J+1 follow-up. No generic « the clinic wants to reach you » re-engagement template | Staff messaging a patient after the 24h window is a real gap, but closing it needs inbox UI and an endpoint that S3 does not schedule; the inbox keeps refusing those sends (docs/api/conversations.md) until that work is planned |
 
+## Decisions (2026-08-03 — S3-2 scheduled senders)
+
+| # | Decision | Rationale / notes |
+|---|---|---|
+| D25 | The schedule lives in **Postgres**, not in Redis: a per-minute sweep enqueues `ScheduledMessage` rows that have come due, instead of a BullMQ delayed job created weeks ahead when the row is written | S2-4 already re-times and cancels rows on every appointment write, so delayed jobs would need the mirror bookkeeping (remove, re-add, ignore-stale) and would make booking an appointment depend on Redis being up. Sweeping keeps one source of truth, survives a flushed Redis, and costs one query a minute. Redis still carries the send itself and its retries (3×, exponential from 1 min), which is what BullMQ is actually good at. The job id **is** the row id, so a double sweep cannot double-send |
+| D26 | A patient who sends « STOP » gets **no confirmation message**, and the match is word-bounded (`\bstop\b`, case-insensitive) rather than whole-message | « Opt-out blocks all outbound » (docs/05) is absolute, and a « c'est noté » would be exactly the message they just refused — the reply also costs a template or a window. Word-bounded honours the policy's « STOP in any message » while sparing « la douleur a stoppé »; an unwanted opt-out is one toggle in the patient sheet, an ignored STOP is a complaint and a Meta quality-rating hit |
+| D27 | Template variables are rendered **at send time** from live data, so `ScheduledMessage.params` stays null in v1 | The row is written days early: first name, clinic name and appointment time can all change before it fires, and re-rendering makes the reminder right rather than faithful to a stale snapshot. The column stays for a future kind whose values are not derivable from the appointment |
+
 ## Risk register
 
 | # | Risk | Severity | Mitigation / trigger to act |

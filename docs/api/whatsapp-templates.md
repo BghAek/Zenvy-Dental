@@ -135,8 +135,9 @@ deleted in the Meta Template Manager and resubmitted with fixed copy.
 
 ## Sending one (S3-2)
 
-Not implemented yet — this is the shape the sender will use, kept here so the
-catalogue and its consumer agree on parameter order:
+`apps/api/src/whatsapp/outbound.processor.ts` builds this payload and
+`graph.ts` `sendTemplate()` posts it. When each row fires, and everything that
+stops it, is `docs/api/appointments.md` §Sending:
 
 ```json
 {
@@ -165,11 +166,18 @@ Parameters are positional: `{{n}}` is filled by the nth entry, in the order
 this page and `templates.ts` list them. A count mismatch is a send-time error
 from Meta, so
 [whatsapp-templates.spec.ts](../../apps/api/test/whatsapp-templates.spec.ts)
-holds body and parameter list to the same length.
+holds body and parameter list to the same length, and the sender refuses to
+call Meta when the two disagree.
 
-Two rules the sender still owes (S3-2): `Patient.optOut` blocks every outbound,
-and a patient reply to a template opens the 24h window so the conversation
-continues under the AI engine.
+Values are rendered at send time in the clinic's timezone with `Intl` in
+`fr-FR` — « mardi 4 août », « 14h30 » — not stored on the row when it is
+scheduled: a name, a clinic or an appointment time can move in the days
+between (`ScheduledMessage.params` therefore stays null in v1).
+
+Both rules the sender owed are in place: `Patient.optOut` is re-checked
+immediately before every send and cancels the row instead of firing, and the
+filled body is stored on the patient's conversation, so their reply opens the
+24h window and continues under the AI engine.
 
 ## Limits worth knowing
 

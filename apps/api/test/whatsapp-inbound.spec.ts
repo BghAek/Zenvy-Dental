@@ -182,6 +182,46 @@ describe('whatsapp inbound worker (S2-2)', () => {
     expect(reopened?.status).toBe('AI');
   });
 
+  it('opts the patient out on « STOP » and cancels their pending reminders (S3-2)', async () => {
+    await processInbound(
+      inbound(phoneNumberIdA, text(`wamid.stop1-${run}`, '33612340010', 'Bonjour'), 'Léa'),
+    );
+    const patient = await basePrisma.patient.findFirstOrThrow({
+      where: { clinicId: clinicA.id, phone: '+33612340010' },
+    });
+    const scheduled = await basePrisma.scheduledMessage.create({
+      data: {
+        clinicId: clinicA.id,
+        patientId: patient.id,
+        kind: 'REMINDER_24H',
+        templateName: 'reminder_24h_fr',
+        sendAt: new Date(Date.now() + 60 * 60 * 1000),
+      },
+    });
+
+    // A sentence merely containing « stoppé » is not an opt-out.
+    await processInbound(
+      inbound(phoneNumberIdA, text(`wamid.stop2-${run}`, '33612340010', 'La douleur a stoppé')),
+    );
+    expect((await basePrisma.patient.findUnique({ where: { id: patient.id } }))?.optOut).toBe(false);
+
+    await processInbound(
+      inbound(phoneNumberIdA, text(`wamid.stop3-${run}`, '33612340010', 'STOP merci')),
+    );
+
+    expect((await basePrisma.patient.findUnique({ where: { id: patient.id } }))?.optOut).toBe(true);
+    // Retroactive: what was already queued for them is called off.
+    expect((await basePrisma.scheduledMessage.findUnique({ where: { id: scheduled.id } }))?.status)
+      .toBe('CANCELLED');
+    // The STOP itself is on record, and nothing went back out.
+    const [conversation] = await basePrisma.conversation.findMany({
+      where: { clinicId: clinicA.id, waContactPhone: '+33612340010' },
+      include: { messages: true },
+    });
+    expect(conversation.messages).toHaveLength(3);
+    expect(conversation.messages.every((m) => m.direction === 'IN')).toBe(true);
+  });
+
   it('applies delivery receipts and ignores ids it never stored', async () => {
     const conversation = await basePrisma.conversation.create({
       data: { clinicId: clinicA.id, waContactPhone: '+33612340008' },

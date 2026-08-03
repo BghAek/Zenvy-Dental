@@ -10,6 +10,8 @@ async function bootstrap() {
   // a module, so the test suite boots the app without touching Redis.
   const { startInboundWorker } = await import('./whatsapp/inbound.queue');
   startInboundWorker();
+  const { startOutboundSender } = await import('./whatsapp/outbound.queue');
+  startOutboundSender();
 }
 
 void bootstrap();

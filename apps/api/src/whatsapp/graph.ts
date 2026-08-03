@@ -1,3 +1,5 @@
+import type { WhatsAppTemplate } from './templates';
+
 // Meta Graph API client — the only place the API talks to WhatsApp outbound.
 // Frontends never call Meta directly (CLAUDE.md §Hard rules).
 
@@ -7,24 +9,19 @@ interface SendResponse {
   messages?: { id?: string }[];
 }
 
-/** Sends a free-form text (24h window checked by the caller) and returns Meta's
- *  message id, which delivery receipts later match on.
+/** POSTs one message payload and returns Meta's message id, which delivery
+ *  receipts later match on.
  *  ponytail: one token in env for the dev test number — swap for the per-clinic
  *  `WhatsAppAccount.accessTokenEnc` (AES-256-GCM, docs/04) when owner-portal
  *  provisioning lands and something actually writes that column. */
-export async function sendText(phoneNumberId: string, to: string, body: string): Promise<string> {
+async function send(phoneNumberId: string, payload: object): Promise<string> {
   const token = process.env.META_ACCESS_TOKEN;
   if (!token || token === 'CHANGE_ME') throw new Error('META_ACCESS_TOKEN is not configured');
 
   const res = await fetch(`https://graph.facebook.com/${GRAPH_VERSION}/${phoneNumberId}/messages`, {
     method: 'POST',
     headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
-    body: JSON.stringify({
-      messaging_product: 'whatsapp',
-      to,
-      type: 'text',
-      text: { body, preview_url: false },
-    }),
+    body: JSON.stringify({ messaging_product: 'whatsapp', ...payload }),
   });
   if (!res.ok) {
     // Meta's error body names the reason (expired token, closed window, …) and
@@ -36,4 +33,29 @@ export async function sendText(phoneNumberId: string, to: string, body: string):
   const id = json.messages?.[0]?.id;
   if (!id) throw new Error('Graph API send returned no message id');
   return id;
+}
+
+/** Free-form text — legal only inside the 24h window, checked by the caller. */
+export function sendText(phoneNumberId: string, to: string, body: string): Promise<string> {
+  return send(phoneNumberId, { to, type: 'text', text: { body, preview_url: false } });
+}
+
+/** A pre-approved template — the only thing that may leave outside the 24h
+ *  window (S3-2, docs/api/whatsapp-templates.md §Sending one). `params` fills
+ *  `{{1}}…{{n}}` positionally, so its order is the catalogue's order. */
+export function sendTemplate(
+  phoneNumberId: string,
+  to: string,
+  template: WhatsAppTemplate,
+  params: string[],
+): Promise<string> {
+  return send(phoneNumberId, {
+    to,
+    type: 'template',
+    template: {
+      name: template.name,
+      language: { code: template.language },
+      components: [{ type: 'body', parameters: params.map((text) => ({ type: 'text', text })) }],
+    },
+  });
 }

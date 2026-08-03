@@ -37,7 +37,7 @@ Hard delete — appointments are not soft-deleted (only `Patient` is, `docs/02-d
 
 ## Reminder lifecycle (S2-4)
 
-Appointment writes emit `ScheduledMessage` rows; the actual sending is S3-2. Rows are visible on the appointment as `reminders: [{ id, kind, sendAt, status }]` so S2-6 can show « Rappel 24h — envoyé ».
+Appointment writes emit `ScheduledMessage` rows; the sending is S3-2 (§Sending, below). Rows are visible on the appointment as `reminders: [{ id, kind, sendAt, status }]` so S2-6 can show « Rappel 24h — envoyé ».
 
 | Event | Effect |
 |---|---|
@@ -57,6 +57,30 @@ Three consequences of applying those rules on *every* write (S2-4, `appointments
 
 Rows already `SENT` are never re-timed, cancelled or duplicated — the send happened, rewriting its record would lie.
 
+## Sending (S3-2)
+
+The schedule stays in Postgres; Redis only carries the send (D25). Every minute the API sweeps `ScheduledMessage` rows that are `PENDING` with `sendAt` in the past (200 per pass, oldest first) and gives each one a BullMQ job whose id is the row id — so a row already in flight is not enqueued twice, and `jobId` on the row marks that it left the sweep.
+
+The job re-reads its row under the row's own clinic and re-checks everything before calling Meta, because minutes may have passed and a retry replays the same job:
+
+| Condition at send time | Row becomes | Sent? |
+|---|---|---|
+| not `PENDING`, or `sendAt` back in the future | untouched | no |
+| `Patient.optOut` or patient soft-deleted | `CANCELLED` | no |
+| a reminder whose appointment has already started (never the J+1 follow-up) | `CANCELLED` | no |
+| no catalogue template for the kind (`CUSTOM`), or missing variables | `FAILED` + `ErrorLog` | no |
+| clinic has no `WhatsAppAccount` | `FAILED` + `ErrorLog` | no |
+| Meta accepted | `SENT` + `Message` row on the patient's thread | yes |
+| Meta or the network failed | stays `PENDING`, retried 3× with exponential backoff from 1 min; then `FAILED` + `ErrorLog` | no |
+
+That third row is the outage rule: S2-4 already drops rows whose `sendAt` slips into the past when it re-times them, and a worker that was down for hours gets the same treatment — « votre rendez-vous a lieu aujourd'hui à 14h30 » sent at 18h is not a late reminder, it is a wrong one.
+
+Template variables are filled **at send time**, not at scheduling time — the patient's first name, the clinic name and the appointment time can all move in the days between. They are rendered in the clinic's `timezone` (`Intl`, `fr-FR`): « mardi 4 août », « 14h30 ». Parameter order is the catalogue's (`docs/api/whatsapp-templates.md`); a count that does not match the registered template fails the row instead of letting Meta reject it.
+
+Reminders leave when the 24h customer-service window is usually shut, which is why they are templates and only templates — the free-form paths (AI engine, staff send) keep their own window checks. What the patient sees is stored on their conversation, so their reply reopens the window and lands back on the AI engine (`docs/api/conversations.md`).
+
 ## Tests required (S2-4)
 
 Cross-tenant test (clinic A reading/mutating clinic B's appointment → 404) is mandatory per `docs/04-security.md`, plus: create → two reminder rows at the right offsets; reschedule → pending rows follow; cancel → pending rows cancelled; `DONE` → follow-up row; opted-out patient → no rows; past `startsAt` → no rows.
+
+For the sender (`test/scheduled-sends.spec.ts`, Graph API stubbed): the sweep returns due rows only; each kind sends its template with the catalogue parameters in order; the filled body lands on the patient's thread as `SYSTEM`; opt-out cancels instead of sending; a reminder for an appointment that already started is cancelled while the follow-up still fires; an already-`SENT` or not-yet-due row does nothing; a clinic with no number fails the row; a Graph failure throws (so BullMQ retries) and leaves the row `PENDING`; and a job run under clinic A cannot send clinic B's row. « STOP » itself is covered in `test/whatsapp-inbound.spec.ts`.

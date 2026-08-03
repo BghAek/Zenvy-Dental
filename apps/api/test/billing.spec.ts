@@ -205,6 +205,27 @@ describe('billing (S3-3)', () => {
       }).expect(200);
       expect((await subscriptionRow())?.status).toBe('ACTIVE');
     });
+
+    it('never touches another clinic (cross-tenant proof)', async () => {
+      const other = await basePrisma.clinic.create({
+        data: {
+          name: `Cabinet Voisin ${run}`,
+          slug: `billing-other-${run}`,
+          subscription: { create: { trialEndsAt: days(14) } },
+        },
+      });
+      try {
+        await postEvent(subscriptionEvent('canceled')).expect(200);
+        const neighbour = await basePrisma.subscription.findUnique({
+          where: { clinicId: other.id },
+        });
+        expect(neighbour?.status).toBe('TRIALING');
+        expect(neighbour?.stripeSubscriptionId).toBeNull();
+        expect((await subscriptionRow())?.status).toBe('CANCELED');
+      } finally {
+        await basePrisma.clinic.delete({ where: { id: other.id } });
+      }
+    });
   });
 
   describe('idempotency', () => {

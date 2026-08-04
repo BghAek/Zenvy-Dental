@@ -7,7 +7,7 @@ import { useMe } from '../../lib/queries/session';
 // callers to /login. A non-401 failure (server/network) shows an error instead
 // of logging the user out, so a transient blip doesn't bounce them to login.
 export function RequireAuth() {
-  const { isLoading, isError, error, refetch } = useMe();
+  const { data, isLoading, isError, error, refetch } = useMe();
 
   if (isLoading) {
     return (
@@ -33,6 +33,11 @@ export function RequireAuth() {
         </Button>
       </div>
     );
+  }
+
+  // If user is authenticated but has no clinic, redirect to onboarding
+  if (!isLoading && !isError && !error && data && !data.clinic) {
+    return <Navigate to="/onboarding" replace />;
   }
 
   return <Outlet />;

@@ -31,7 +31,10 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 // spends no LLM call).
 // ponytail: one flat budget for every clinic, per-plan budgets when a second
 // pricing tier exists.
-export const AI_DAILY_TOKEN_BUDGET = Number(process.env.AI_DAILY_TOKEN_BUDGET ?? 300_000);
+// Parsed, not trusted: `AI_DAILY_TOKEN_BUDGET=300k` would otherwise be NaN, and
+// every `spent >= NaN` is false — a typo would silently remove the ceiling.
+const configuredBudget = Number(process.env.AI_DAILY_TOKEN_BUDGET);
+export const AI_DAILY_TOKEN_BUDGET = configuredBudget > 0 ? configuredBudget : 300_000;
 
 interface ReplyVerdict {
   reply: string;

@@ -18,6 +18,12 @@ No `console.log` in committed code — ESLint rule enforces.
 
 The global NestJS exception filter (and BullMQ failed-job handler) writes every `error`-level event to the `ErrorLog` table: correlationId, clinicId, userId, module, severity, message, stack, context JSON. Owner portal error viewer = filterable table over this (by clinic, module, severity, date) + detail drawer. <!-- ponytail: Postgres as the error store; ship to a real APM (Sentry) when volume or alerting needs demand it -->
 
+## AI cost logging (S3-6)
+
+Every LLM call the engine makes writes one `AiUsage` row — model, prompt/completion tokens, and the price in micro-euros computed at write time (a `gpt-4o-mini` call rounds to zero in cents, and a later rate change must not rewrite history). Rows are tenant-scoped, so per-clinic spend is one `sum` over `(clinicId, createdAt)`.
+
+The same table is the **daily token budget guard**: before the first paid call of an inbound message, the engine sums the clinic's last 24h and stops answering past `AI_DAILY_TOKEN_BUDGET` (default 300 000 tokens, D31). Exhaustion writes a `warn` ErrorLog row for `module: ai` — that row *is* the owner-portal alert, since the error viewer already filters by clinic and module. Failing to record usage never blocks a reply: the call is paid for either way, so the miss is logged and the patient is answered. <!-- ponytail: row per call, roll up to daily totals if the table gets big -->
+
 ## External-call hygiene
 
 Meta / Stripe / OpenAI calls: timeouts set, retries with backoff where idempotent (BullMQ handles job retry), every failure logged `warn` (retryable) or `error` (final) with the provider's error payload in context. A final WhatsApp send failure surfaces on the conversation in the dashboard — the clinic must never believe a message was sent when it wasn't.

@@ -84,7 +84,9 @@ OPENAI_API_KEY=sk-... DATABASE_URL=postgresql://postgres:zenvy@localhost:5433/ze
   pnpm --filter @zenvy/api exec vitest run test/ai-evals.spec.ts
 ```
 
-Each case costs two `gpt-4o-mini` calls at most. A failure names the case id from `apps/api/src/ai/evals/cases.ts`.
+Each case costs two `gpt-4o-mini` calls at most (the whole corpus is a fraction of a cent). The live half passes at **≥95% of the corpus** (D32) and a failure lists the case ids that missed, from `apps/api/src/ai/evals/cases.ts`; the deterministic half must be green case by case.
+
+`AI_DAILY_TOKEN_BUDGET` (default 300 000) caps what one clinic's assistant spends in a rolling 24h — set it low in a local `.env` to watch a thread flip to `HUMAN` on budget exhaustion.
 
 ### Stripe webhook (S3-3)
 

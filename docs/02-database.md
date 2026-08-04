@@ -30,6 +30,7 @@ A tenant-scoped query without a clinic context must throw, never silently return
 | `SupportThread` / `SupportMessage` | ✔ | clinic ↔ owner support chat |
 | `ErrorLog` | ✔ (nullable) | correlationId, clinicId?, userId?, module, severity, message, stack, context JSON, createdAt |
 | `StripeEvent` | — (not tenant-scoped) | Stripe webhook idempotency ledger: Stripe's event id as PK, type, createdAt — a redelivered event inserts nothing and is skipped (S3-3) |
+| `AiUsage` | ✔ | one row per LLM call (S3-6): model, promptTokens, completionTokens, costMicroEur — the cost log, and the ledger the daily token budget guard sums |
 | `AuditLog` | ✔ (nullable) | actor, action, entity, entityId, diff JSON — **written from day one, viewer UI is v2** |
 
 ## Conventions
@@ -40,7 +41,7 @@ A tenant-scoped query without a clinic context must throw, never silently return
 - Money: integer cents, never floats.
 - Enums live in `packages/shared` and mirror Prisma enums 1:1.
 - Migrations: `prisma migrate` only — never `db push` beyond local experiments. Every migration is reviewed in its PR.
-- Indexes minimum: every FK, `(clinicId, phone)` unique on Patient, `phoneNumberId` unique, `(clinicId, waContactPhone)` unique + `(clinicId, lastMessageAt)` on Conversation, `(status, sendAt)` on ScheduledMessage, `(clinicId, createdAt)` on ErrorLog.
+- Indexes minimum: every FK, `(clinicId, phone)` unique on Patient, `phoneNumberId` unique, `(clinicId, waContactPhone)` unique + `(clinicId, lastMessageAt)` on Conversation, `(status, sendAt)` on ScheduledMessage, `(clinicId, createdAt)` on ErrorLog and on AiUsage.
 
 ## Seeding
 

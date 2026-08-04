@@ -32,8 +32,8 @@ Meta webhook → verify signature → 200 fast → enqueue (BullMQ)
 
 - Model: start `gpt-4o-mini` for cost, `gpt-4o` class where quality demands; provider isolated behind one `LlmService` so models/providers swap freely. Temperature low. Response length capped.
 - 24h rule: free-form replies only within Meta's 24h customer-service window; outside it, **approved templates only** (enforced in `whatsapp` module, not trusted to the LLM).
-- Cost guard: per-clinic daily token budget with alert to owner portal when exceeded. <!-- ponytail: fixed daily cap, per-plan budgets when >1 pricing tier is live -->
-- Reply cap (S2-7, D21): **60 AI replies per clinic per hour**. Checked after the free emergency keyword pass and before the first paid call, so a message flood costs nothing and still cannot silence an escalation. Over the cap the thread flips to `HUMAN` with an `ErrorLog` — the message is stored and visible, just not answered. Replaced by the token budget above in S3-6.
+- Cost guard (S3-6, D31): **per-clinic budget of `AI_DAILY_TOKEN_BUDGET` tokens (default 300 000) over a rolling 24h**, summed from the `AiUsage` cost log. Checked after the free emergency keyword pass and before the first paid call, so a message flood costs nothing and still cannot silence an escalation (R6). Over budget the thread flips to `HUMAN` with a `warn` `ErrorLog` — the owner-portal alert — and the message is stored and visible, just not answered. Replaces the S2-7 hourly reply cap (D21). <!-- ponytail: one flat budget for every clinic, per-plan budgets when >1 pricing tier is live -->
+- Cost logging: one `AiUsage` row per LLM call (tokens + micro-euros priced at write time), which is what the guard sums — docs/06-observability.md §AI cost logging.
 
 ## Outbound automation (reminders / follow-ups)
 
@@ -48,7 +48,7 @@ Meta webhook → verify signature → 200 fast → enqueue (BullMQ)
 |---|---|
 | `llm.ts` | The only place the API talks to the provider. Raw `fetch` on Chat Completions with a strict `json_schema`; model from `OPENAI_MODEL` (default `gpt-4o-mini`), temperature 0.2, 15s timeout. No key → the engine stays silent and logs, rather than handing every thread to a human. |
 | `prompt.ts` | The French system prompt (the six absolute rules above), the context builder, and the delimited untrusted block. `Clinic.aiConfig` is dumped key/value until its contract lands in S3-4. |
-| `guardrails.ts` | Deterministic post-checks — the prompt asks, these enforce. Emergency keyword fast path, then `TOO_LONG` / `NOT_FRENCH` / `MEDICAL_ADVICE` / `INVENTED_FACT` on every generated reply. |
+| `guardrails.ts` | Deterministic post-checks — the prompt asks, these enforce. Emergency keyword fast path, then `TOO_LONG` / `NOT_FRENCH` / `PROMPT_LEAK` / `MEDICAL_ADVICE` / `INVENTED_FACT` on every generated reply. `PROMPT_LEAK` (S3-6) catches the injection that succeeds by being *answered* rather than obeyed — a reply carrying our own prompt scaffolding (« RÈGLES ABSOLUES », the untrusted-data delimiters) never reaches the patient. |
 | `engine.ts` | The flow above, entered from the inbound worker inside `runAsClinic`. Never throws: a failure ends with the thread `HUMAN` and an `ErrorLog`, because the worker's `waMessageId` dedup means a job retry would skip the reply entirely. |
 
 Two LLM calls per inbound message at most: the emergency classifier (skipped when a keyword already matched) and one generation call returning `{ reply, handoff, understood }`.
@@ -65,3 +65,5 @@ A small French eval set (`apps/api/src/ai/evals/cases.ts`) covering: emergency p
 
 - **Deterministic half** — keyword classifier, output guardrails, prompt assembly. Runs on every PR, costs nothing, cannot flake. Failing eval = failing CI.
 - **Live half** — the same French cases against the real model. Skipped unless `OPENAI_API_KEY` is set, so CI is never billed and never red on a provider outage. Run it locally before any PR touching the `ai` module (`docs/13-local-dev.md` §Evals).
+
+S3-6 widened the corpus to injection variants (delimiter forgery, mode switches, role-play, a third party's quoted order), anger and frustration, and edge French — SMS spelling, missing accents, code-switching, emoji, very formal phrasing — plus two emergencies deliberately worded around the keyword list, where the classifier is the only thing standing between the patient and a missed urgency. The live half is scored as a **pass rate ≥95%** rather than case by case (D32): one borderline judgement on colloquial French is not a regression, a fifth of the corpus drifting is. The deterministic half stays all-or-nothing.

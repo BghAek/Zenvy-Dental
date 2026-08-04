@@ -138,6 +138,7 @@ model Clinic {
   supportThreads     SupportThread[]
   errorLogs          ErrorLog[]
   auditLogs          AuditLog[]
+  aiUsage            AiUsage[]
 }
 
 model User {
@@ -330,6 +331,27 @@ model Subscription {
   trialEndsAt          DateTime?
   createdAt            DateTime           @default(now())
   updatedAt            DateTime           @updatedAt
+}
+
+// One row per LLM call (S3-6): what the AI cost this clinic, and the ledger the
+// daily token budget guard reads before it pays for another one. Append-only —
+// summing a day's rows is one indexed aggregate, and concurrent workers never
+// contend the way an incremented counter row would.
+// ponytail: row per call, roll up to daily totals if the table ever gets big.
+model AiUsage {
+  id               String   @id @default(cuid())
+  clinicId         String
+  clinic           Clinic   @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  model            String
+  promptTokens     Int
+  completionTokens Int
+  /// Micro-euros: a gpt-4o-mini call costs a fraction of a cent, which rounds
+  /// to zero in cents. Priced at write time so a later rate change cannot
+  /// rewrite history.
+  costMicroEur     Int
+  createdAt        DateTime @default(now())
+
+  @@index([clinicId, createdAt])
 }
 
 // Webhook idempotency ledger (S3-3): Stripe's own event id is the primary key,

@@ -21,15 +21,17 @@ import {
 
 const logger = new Logger('AiEngine');
 const WINDOW_MS = 24 * 60 * 60 * 1000;
-const HOUR_MS = 60 * 60 * 1000;
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 // Anyone who can message the clinic's number can make us call the LLM, so cap
-// what one clinic's assistant answers per hour. Past it the thread goes to a
-// human: the message is still stored and visible, we just stop paying to answer
-// it. The emergency keyword path is deliberately exempt (R6 — a false negative
-// costs a patient, and it spends no LLM call).
-// ponytail: flat reply cap, replace with the per-clinic token budget in S3-6.
-export const AI_REPLIES_PER_HOUR = 60;
+// what one clinic's assistant spends in a rolling 24h (S3-6, D31 — replaces the
+// S2-7 reply cap). Past it the thread goes to a human: the message is still
+// stored and visible, we just stop paying to answer it. The emergency keyword
+// path is deliberately exempt (R6 — a false negative costs a patient, and it
+// spends no LLM call).
+// ponytail: one flat budget for every clinic, per-plan budgets when a second
+// pricing tier exists.
+export const AI_DAILY_TOKEN_BUDGET = Number(process.env.AI_DAILY_TOKEN_BUDGET ?? 300_000);
 
 interface ReplyVerdict {
   reply: string;
@@ -130,8 +132,11 @@ async function run(conversationId: string): Promise<void> {
 
   // Checked between the free keyword pass and the first paid call: a flood
   // cannot run up the bill, and cannot silence the emergency path either.
-  if (!keywordUrgent && (await overReplyCap())) {
-    await warn(conversationId, 'AI hourly reply cap reached: thread handed to a human');
+  if (!keywordUrgent && (await overTokenBudget())) {
+    await warn(
+      conversationId,
+      `AI daily token budget reached (${AI_DAILY_TOKEN_BUDGET}): thread handed to a human`,
+    );
     await prisma.conversation.update({
       where: { id: conversationId },
       data: { status: 'HUMAN' },
@@ -141,8 +146,14 @@ async function run(conversationId: string): Promise<void> {
 
   const urgent =
     keywordUrgent ||
-    (await llm.complete<{ urgent: boolean }>(emergencyMessages(latest.body), EMERGENCY_SCHEMA, 16))
-      .urgent;
+    (
+      await paidCall<{ urgent: boolean }>(
+        conversation.clinicId,
+        emergencyMessages(latest.body),
+        EMERGENCY_SCHEMA,
+        16,
+      )
+    ).urgent;
   if (urgent) {
     // The urgent flag on the inbox thread is how the clinic is notified in v1.
     // ponytail: inbox flag only, add push/email when staff ask for it.
@@ -174,7 +185,8 @@ async function run(conversationId: string): Promise<void> {
     history: [...recent].reverse(),
   };
 
-  const verdict = await llm.complete<ReplyVerdict>(
+  const verdict = await paidCall<ReplyVerdict>(
+    conversation.clinicId,
     buildMessages(context),
     REPLY_SCHEMA,
     MAX_REPLY_TOKENS,
@@ -204,12 +216,35 @@ async function run(conversationId: string): Promise<void> {
   await deliver(conversation, verdict.reply, { handoff: false });
 }
 
-/** `prisma` is tenant-scoped, so this counts the routed clinic's own replies. */
-async function overReplyCap(): Promise<boolean> {
-  const sentLastHour = await prisma.message.count({
-    where: { direction: 'OUT', author: 'AI', createdAt: { gte: new Date(Date.now() - HOUR_MS) } },
+/** Every LLM call the engine makes goes through here, so nothing is spent
+ *  without landing in the cost log the budget guard reads back. */
+async function paidCall<T>(
+  clinicId: string,
+  messages: Parameters<typeof llm.complete>[0],
+  schema: Parameters<typeof llm.complete>[1],
+  maxTokens: number,
+): Promise<T> {
+  const { data, usage } = await llm.complete<T>(messages, schema, maxTokens);
+  try {
+    // `prisma` re-stamps clinicId from the tenant context either way — passing
+    // it keeps the write typed like every other tenant-scoped create.
+    await prisma.aiUsage.create({ data: { ...usage, clinicId } });
+  } catch (error) {
+    // Accounting must never cost a patient their answer — the call is already
+    // paid for either way, so log the miss and reply.
+    logger.warn(`AI usage not recorded: ${(error as Error).message}`);
+  }
+  return data;
+}
+
+/** `prisma` is tenant-scoped, so this sums the routed clinic's own spend. */
+async function overTokenBudget(): Promise<boolean> {
+  const spent = await prisma.aiUsage.aggregate({
+    _sum: { promptTokens: true, completionTokens: true },
+    where: { createdAt: { gte: new Date(Date.now() - DAY_MS) } },
   });
-  return sentLastHour >= AI_REPLIES_PER_HOUR;
+  const tokens = (spent._sum.promptTokens ?? 0) + (spent._sum.completionTokens ?? 0);
+  return tokens >= AI_DAILY_TOKEN_BUDGET;
 }
 
 /** True when the two previous assistant messages were both clarification

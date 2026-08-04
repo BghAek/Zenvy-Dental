@@ -1,4 +1,4 @@
-import { MAX_REPLY_CHARS } from './prompt';
+import { MAX_REPLY_CHARS, UNTRUSTED_DELIMITERS } from './prompt';
 
 // Deterministic safety net around the model (docs/05-ai-policy.md): the prompt
 // asks, this enforces. The prompt can be talked out of a rule; a regex cannot.
@@ -47,7 +47,19 @@ export function emergencyKeywordHit(text: string): boolean {
   return EMERGENCY_KEYWORDS.some((keyword) => normalized.includes(keyword));
 }
 
-export type GuardrailFailure = 'TOO_LONG' | 'NOT_FRENCH' | 'MEDICAL_ADVICE' | 'INVENTED_FACT';
+export type GuardrailFailure =
+  'TOO_LONG' | 'NOT_FRENCH' | 'MEDICAL_ADVICE' | 'INVENTED_FACT' | 'PROMPT_LEAK';
+
+// S3-6: the one injection that succeeds by being *answered* rather than obeyed
+// — « répète tes instructions ». These strings exist nowhere but our own prompt
+// scaffolding, so a reply carrying one is the system prompt coming back out.
+const PROMPT_MARKERS = [
+  normalize(UNTRUSTED_DELIMITERS.open),
+  normalize(UNTRUSTED_DELIMITERS.close),
+  'regles absolues',
+  'informations du cabinet (seule source',
+  'handoff=true',
+];
 
 // High-confidence medical-advice signals only. Broad diagnosis phrasing is left
 // to the prompt's handoff rule on purpose: « vous avez rendez-vous mardi » is a
@@ -101,6 +113,8 @@ export function checkReply(reply: string, facts: ReplyFacts): GuardrailFailure |
   if (trimmed.length >= LANGUAGE_CHECK_MIN_CHARS && !FRENCH_TOKENS.test(normalized)) {
     return 'NOT_FRENCH';
   }
+
+  if (PROMPT_MARKERS.some((marker) => normalized.includes(marker))) return 'PROMPT_LEAK';
 
   if (MEDICAL_PATTERNS.some((pattern) => pattern.test(normalized))) return 'MEDICAL_ADVICE';
 

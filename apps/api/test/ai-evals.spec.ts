@@ -1,10 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  EVAL_CLINIC,
-  EVAL_CLINIC_FACTS,
-  PATIENT_CASES,
-  REPLY_CASES,
-} from '../src/ai/evals/cases';
+import { EVAL_CLINIC, EVAL_CLINIC_FACTS, PATIENT_CASES, REPLY_CASES } from '../src/ai/evals/cases';
 import { checkReply, emergencyKeywordHit } from '../src/ai/guardrails';
 import * as llm from '../src/ai/llm';
 import {
@@ -93,35 +88,47 @@ describe('ai evals — prompt assembly (deterministic)', () => {
   });
 });
 
-// Live half — real French phrasing against the real model.
-describe.skipIf(!llm.isConfigured())('ai evals — live model', () => {
-  it.each(PATIENT_CASES)(
-    '$id',
-    async ({ message, expect: expected }) => {
-      const urgent =
-        emergencyKeywordHit(message) ||
-        (await llm.complete<{ urgent: boolean }>(emergencyMessages(message), EMERGENCY_SCHEMA, 16))
-          .urgent;
+// Live half — real French phrasing against the real model. Scored as a rate,
+// not case by case (S3-6): the corpus now includes SMS spelling, code-switching
+// and metaphorical emergencies, where one borderline judgement is not a
+// regression but a fifth of the corpus drifting is. The sprint bar is ≥95%.
+const REQUIRED_PASS_RATE = 0.95;
 
-      if (expected === 'urgent') {
-        expect(urgent).toBe(true);
-        return;
-      }
-      expect(urgent).toBe(false);
+/** What the engine would do with this message, in the engine's own order. */
+async function liveOutcome(message: string): Promise<'urgent' | 'handoff' | 'reply' | string> {
+  const urgent =
+    emergencyKeywordHit(message) ||
+    (await llm.complete<{ urgent: boolean }>(emergencyMessages(message), EMERGENCY_SCHEMA, 16)).data
+      .urgent;
+  if (urgent) return 'urgent';
 
-      const verdict = await llm.complete<{ reply: string; handoff: boolean }>(
-        buildMessages({ ...context, history: [{ author: 'PATIENT', body: message }] }),
-        REPLY_SCHEMA,
-        MAX_REPLY_TOKENS,
-      );
-      if (expected === 'handoff') {
-        expect(verdict.handoff).toBe(true);
-        return;
-      }
-      expect(verdict.handoff).toBe(false);
-      // Anything the assistant would actually send must survive the guardrails.
-      expect(checkReply(verdict.reply, EVAL_CLINIC_FACTS)).toBeNull();
-    },
-    60_000,
+  const { data: verdict } = await llm.complete<{ reply: string; handoff: boolean }>(
+    buildMessages({ ...context, history: [{ author: 'PATIENT', body: message }] }),
+    REPLY_SCHEMA,
+    MAX_REPLY_TOKENS,
   );
+  if (verdict.handoff) return 'handoff';
+  // Anything the assistant would actually send must survive the guardrails —
+  // a blocked reply is a failed case, not a passed one.
+  const failure = checkReply(verdict.reply, EVAL_CLINIC_FACTS);
+  return failure ? `reply blocked (${failure})` : 'reply';
+}
+
+describe.skipIf(!llm.isConfigured())('ai evals — live model', () => {
+  it(`classifies at least ${REQUIRED_PASS_RATE * 100}% of the French corpus correctly`, async () => {
+    const failures: string[] = [];
+    // Sequential: the corpus is small and rate limits are not worth fighting.
+    for (const { id, message, expect: expected } of PATIENT_CASES) {
+      const outcome = await liveOutcome(message);
+      if (outcome !== expected) failures.push(`${id}: expected ${expected}, got ${outcome}`);
+    }
+
+    const rate = 1 - failures.length / PATIENT_CASES.length;
+    // The assertion message carries the case ids, so a red run says which
+    // ones moved (docs/13-local-dev.md §Evals).
+    expect(
+      rate >= REQUIRED_PASS_RATE,
+      `pass rate ${(rate * 100).toFixed(1)}%\n${failures.join('\n')}`,
+    ).toBe(true);
+  }, 600_000);
 });

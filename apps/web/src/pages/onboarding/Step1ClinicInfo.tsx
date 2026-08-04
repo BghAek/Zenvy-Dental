@@ -50,7 +50,7 @@ export function Step1ClinicInfo() {
       });
       // Proceed to the next step
       navigate('/onboarding/whatsapp');
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
     }
   };

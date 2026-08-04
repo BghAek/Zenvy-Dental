@@ -85,7 +85,7 @@ export function Step3AiConfig() {
           faq: data.faq,
           services,
         },
-      } as any);
+      });
       
       // Invalidate the session so RequireAuth picks up the completed status 
       // and redirect to the dashboard

@@ -23,7 +23,7 @@ export function Step2WhatsApp() {
       // In the future this might hit a POST /onboarding-requests endpoint
       await updateClinic.mutateAsync({
         onboardingStatus: 'IN_PROGRESS',
-      } as any);
+      });
       
       // Proceed to the next step
       navigate('/onboarding/ai-config');

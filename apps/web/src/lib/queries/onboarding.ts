@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createClinicRequestSchema } from '@zenvy/shared';
+import { createClinicRequestSchema, createClinicResponseSchema } from '@zenvy/shared';
 import { z } from 'zod';
 import { api } from '../api';
 import { sessionKeys } from './session';
@@ -9,10 +9,10 @@ export function useCreateClinic() {
   return useMutation({
     mutationFn: async (payload: z.infer<typeof createClinicRequestSchema>) => {
       try {
-        const res = await api.post('/clinics', createClinicRequestSchema, payload);
+        const res = await api.post('/clinics', createClinicResponseSchema, payload);
         
         // Store in localStorage for the mock environment
-        const clinic = (res as any).clinic;
+        const clinic = res.clinic;
         if (clinic) {
           localStorage.setItem('zenvy_mock_clinic', JSON.stringify(clinic));
         }

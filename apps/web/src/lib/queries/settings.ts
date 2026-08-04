@@ -96,6 +96,7 @@ export function useUpdateClinic() {
       phone?: string | null;
       address?: string | null;
       timezone?: string;
+      onboardingStatus?: string;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       aiConfig?: any;
     }) => {

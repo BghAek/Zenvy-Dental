@@ -23,6 +23,10 @@ import { ProfileSettings } from './pages/settings/ProfileSettings';
 import { AiSettings } from './pages/settings/AiSettings';
 import { StaffSettings } from './pages/settings/StaffSettings';
 import { SubscriptionSettings } from './pages/settings/SubscriptionSettings';
+import { OnboardingLayout } from './pages/onboarding/OnboardingLayout';
+import { Step1ClinicInfo } from './pages/onboarding/Step1ClinicInfo';
+import { Step2WhatsApp } from './pages/onboarding/Step2WhatsApp';
+import { Step3AiConfig } from './pages/onboarding/Step3AiConfig';
 
 const queryClient = new QueryClient();
 
@@ -52,6 +56,12 @@ export function App() {
           <Route path="/sample" element={<SampleDesignPage />} />
           
           <Route element={<RequireAuth />}>
+            <Route path="/onboarding" element={<OnboardingLayout />}>
+              <Route index element={<Step1ClinicInfo />} />
+              <Route path="whatsapp" element={<Step2WhatsApp />} />
+              <Route path="ai-config" element={<Step3AiConfig />} />
+            </Route>
+
             <Route element={<DashboardLayout />}>
               <Route path="/" element={<PlaceholderPage title="Tableau de bord" description="Bienvenue sur votre espace ZenvyDental." />} />
               <Route path="/inbox" element={<InboxPage />} />

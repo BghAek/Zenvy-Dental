@@ -14,7 +14,7 @@ vi.mock('../src/whatsapp/graph', () => ({
 }));
 vi.mock('../src/ai/llm', () => ({ isConfigured: () => true, complete: vi.fn() }));
 
-import { AI_REPLIES_PER_HOUR, CLARIFY, HANDOFF, replyToInbound } from '../src/ai/engine';
+import { AI_DAILY_TOKEN_BUDGET, CLARIFY, HANDOFF, replyToInbound } from '../src/ai/engine';
 import { complete as llmComplete } from '../src/ai/llm';
 import { sendText as graphSendText } from '../src/whatsapp/graph';
 
@@ -24,17 +24,25 @@ const sendText = vi.mocked(graphSendText);
 const run = randomUUID().slice(0, 8);
 let seeded = 0;
 
+/** Every call is metered (S3-6), so the stubs carry a usage block too. */
+const stubUsage = {
+  model: 'gpt-4o-mini',
+  promptTokens: 500,
+  completionTokens: 100,
+  costMicroEur: 135,
+};
+
 /** The classifier call comes first, then generation — queue them in that order. */
 function stubModel(options: { urgent?: boolean; verdict?: object }): void {
-  complete.mockResolvedValueOnce({ urgent: options.urgent ?? false });
-  if (options.verdict) complete.mockResolvedValueOnce(options.verdict);
+  complete.mockResolvedValueOnce({ data: { urgent: options.urgent ?? false }, usage: stubUsage });
+  if (options.verdict) complete.mockResolvedValueOnce({ data: options.verdict, usage: stubUsage });
 }
 
 describe('ai engine (S2-3)', () => {
   const startedAt = new Date();
   let clinicA: { id: string };
   let clinicB: { id: string };
-  /** Its own clinic: the cap test fills an hour's quota and would starve the rest. */
+  /** Its own clinic: the budget test spends a day's tokens and would starve the rest. */
   let clinicCapped: { id: string };
 
   const messagesOf = (conversationId: string) =>
@@ -265,19 +273,36 @@ describe('ai engine (S2-3)', () => {
     expect(after?.status).toBe('HUMAN');
   });
 
-  it('stops answering past the hourly cap, but still escalates an emergency', async () => {
-    // An hour's quota already spent on another thread of the same clinic (S2-7:
-    // anyone who can message the number can otherwise run up the LLM bill).
-    const spent = await seedThread(clinicCapped.id, 'Bonjour');
-    await basePrisma.message.createMany({
-      data: Array.from({ length: AI_REPLIES_PER_HOUR }, (_, i) => ({
+  it('logs what every model call cost, under the calling clinic', async () => {
+    const conversation = await seedThread(clinicA.id, 'Bonjour, vous ouvrez quand ?');
+    const before = await basePrisma.aiUsage.count({ where: { clinicId: clinicA.id } });
+    stubModel({
+      verdict: { reply: 'Le cabinet est ouvert de 9h à 19h.', handoff: false, understood: true },
+    });
+
+    await runAsClinic(clinicA.id, () => replyToInbound(conversation.id));
+
+    // Classifier + generation: two calls, two rows, priced at write time.
+    const rows = await basePrisma.aiUsage.findMany({
+      where: { clinicId: clinicA.id },
+      orderBy: { createdAt: 'desc' },
+      take: 2,
+    });
+    expect(await basePrisma.aiUsage.count({ where: { clinicId: clinicA.id } })).toBe(before + 2);
+    expect(rows[0]).toMatchObject({ model: 'gpt-4o-mini', promptTokens: 500, costMicroEur: 135 });
+  });
+
+  it('stops answering past the daily token budget, but still escalates an emergency', async () => {
+    // A day's budget already spent by this clinic (S2-7/S3-6: anyone who can
+    // message the number can otherwise run up the LLM bill).
+    await basePrisma.aiUsage.create({
+      data: {
         clinicId: clinicCapped.id,
-        conversationId: spent.id,
-        direction: 'OUT' as const,
-        author: 'AI' as const,
-        body: `Réponse ${i}`,
-        waMessageId: `wamid.cap-${i}-${run}`,
-      })),
+        model: 'gpt-4o-mini',
+        promptTokens: AI_DAILY_TOKEN_BUDGET,
+        completionTokens: 0,
+        costMicroEur: 1,
+      },
     });
 
     const flood = await seedThread(clinicCapped.id, 'Vous ouvrez à quelle heure ?');

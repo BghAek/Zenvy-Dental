@@ -9,14 +9,14 @@ import {
   Logger,
   PipeTransform,
 } from '@nestjs/common';
-import { ERROR_CODES, type ErrorCode, type ErrorResponse } from '@zenvy/shared';
-import type { Response } from 'express';
+import { ERROR_CODES, type ErrorCode, type ErrorResponse, type Paginated } from '@zenvy/shared';
+import type { Request, Response } from 'express';
 import type { ZodType } from 'zod';
+import { basePrisma } from '../prisma/client';
 
 // The error envelope (docs/03-api-conventions.md) + shared-Zod body validation.
 // ponytail: correlationId is minted here per error; the request-wide pino
-// correlation middleware + ErrorLog persistence land with the observability
-// module (docs/06, S4-1) and will feed this filter instead.
+// correlation middleware lands with the rest of the observability work (docs/06).
 
 /** Throw with a stable machine code and a French, user-renderable message. */
 export class ApiException extends HttpException {
@@ -44,8 +44,10 @@ const STATUS_FALLBACK: Record<number, { code: ErrorCode; message: string }> = {
 export class ApiExceptionFilter implements ExceptionFilter {
   private readonly logger = new Logger('ApiExceptionFilter');
 
-  catch(exception: unknown, host: ArgumentsHost): void {
-    const res = host.switchToHttp().getResponse<Response>();
+  async catch(exception: unknown, host: ArgumentsHost): Promise<void> {
+    const http = host.switchToHttp();
+    const res = http.getResponse<Response>();
+    const req = http.getRequest<Request>();
     const correlationId = `req_${randomUUID().replaceAll('-', '').slice(0, 12)}`;
 
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
@@ -76,6 +78,30 @@ export class ApiExceptionFilter implements ExceptionFilter {
     if (status >= 500) {
       const stack = exception instanceof Error ? exception.stack : String(exception);
       this.logger.error(`[${correlationId}] unhandled exception: ${stack}`);
+      // The durable trail the owner portal queries (docs/06-observability.md).
+      // Only 5xx: a 4xx is the caller's mistake, and logging those would drown
+      // the real breakage in validation noise. Awaited so the row exists before
+      // the user is told the reference code — the whole point is that the
+      // founder can look it up the moment the clinic reports it.
+      // ponytail: one insert on the error path; if the DB itself is what broke,
+      // the failed write is caught here and the response still goes out.
+      await basePrisma.errorLog
+        .create({
+          data: {
+            correlationId,
+            clinicId: req.sessionUser?.clinicId ?? null,
+            userId: req.sessionUser?.id ?? null,
+            module: 'http',
+            severity: 'ERROR',
+            // The raw exception message, not the generic French envelope one.
+            message: exception instanceof Error ? exception.message : String(exception),
+            stack: stack ?? null,
+            context: { method: req.method, path: req.originalUrl ?? req.url, status },
+          },
+        })
+        .catch((err: unknown) => {
+          this.logger.error(`[${correlationId}] ErrorLog write failed: ${String(err)}`);
+        });
     } else {
       this.logger.warn(`[${correlationId}] ${status} ${code}: ${message}`);
     }
@@ -102,3 +128,17 @@ export class ZodValidationPipe<T> implements PipeTransform<unknown, T> {
     return result.data;
   }
 }
+
+// Cursor pagination, the other half of docs/03-api-conventions.md: query with
+// `take: limit + 1` over a stable (sort, id) order, then let these two shape the
+// page. ponytail: the list routes written before S4-1 still inline this — they
+// work; fold them in when one of them next needs a change.
+
+/** One extra row is the whole trick: its presence IS the next page. */
+export const page = <T extends { id: string }>(rows: T[], limit: number): Paginated<T> => {
+  const hasMore = rows.length > limit;
+  const items = hasMore ? rows.slice(0, limit) : rows;
+  return { items, nextCursor: hasMore ? items[items.length - 1].id : null };
+};
+
+export const cursorArgs = (cursor?: string) => (cursor ? { cursor: { id: cursor }, skip: 1 } : {});

@@ -8,6 +8,7 @@ import { SubscriptionGuard } from './billing/subscription.guard';
 import { ApiExceptionFilter } from './common/http';
 import { ConversationsModule } from './conversations/conversations.module';
 import { IdentityModule } from './identity/identity.module';
+import { OpsModule } from './ops/ops.module';
 import { PatientsModule } from './patients/patients.module';
 import { tenantContextMiddleware } from './tenancy/tenant-context.middleware';
 import { WhatsAppModule } from './whatsapp/whatsapp.module';
@@ -20,6 +21,7 @@ import { WhatsAppModule } from './whatsapp/whatsapp.module';
     ConversationsModule,
     AppointmentsModule,
     BillingModule,
+    OpsModule,
   ],
   controllers: [AppController],
   providers: [

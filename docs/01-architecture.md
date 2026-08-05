@@ -51,7 +51,7 @@ Rules that must never be violated:
 | `automation` | BullMQ queues: reminders, follow-ups, trial-expiry, scheduled sends |
 | `billing` | Stripe: checkout, subscription state, trial logic, webhooks |
 | `support` | Owner↔clinic support threads |
-| `ops` | Owner portal endpoints: clients, error logs, onboarding queue |
+| `ops` | Owner portal endpoints: clients, error logs, onboarding queue — plus both sides of support chat (`docs/api/ops.md`) |
 | `observability` | pino logging, correlation IDs, ErrorLog persistence, global exception filter |
 
 ## Frontend stacks

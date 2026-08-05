@@ -37,6 +37,10 @@ export const ERROR_CODES = {
   BILLING_NO_CUSTOMER: 409,
   // Stripe keys absent from the environment — a deployment gap, not user error.
   BILLING_UNAVAILABLE: 503,
+  // Ops / support (docs/api/ops.md)
+  ERROR_LOG_NOT_FOUND: 404,
+  ONBOARDING_REQUEST_NOT_FOUND: 404,
+  SUPPORT_THREAD_NOT_FOUND: 404,
 } as const;
 
 export type ErrorCode = keyof typeof ERROR_CODES;

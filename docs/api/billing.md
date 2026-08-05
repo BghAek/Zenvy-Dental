@@ -67,7 +67,7 @@ usable = status === ACTIVE
 - **Trial expiry needs no job**: an expired trial is computed at request time from `trialEndsAt`, so a `TRIALING` row that ran out is already blocked.
 - A `TRIALING` row with **no** `trialEndsAt` is **not** usable (S3-7): an unset column must never read as an unlimited trial. Every legitimate `TRIALING` row has an end date — clinic creation sets 14 days, and Stripe always sends `trial_end` with a `trialing` status.
 - `PAST_DUE` blocks immediately. Stripe's smart retries take several days before flipping a subscription to `past_due`, so that delay *is* the grace period (decision D28).
-- Deny by default, like `RolesGuard`: new modules are gated unless they opt out with `@NoSubscription()`. Exempt routes are only those a locked-out or clinic-less user must still reach: `GET /me`, `POST /clinics`, `POST /staff-invites/accept`, and `/billing/*`. `@Public()` routes (health, webhooks) and `SUPER_ADMIN` bypass entirely; a user with no clinic passes the guard and is stopped by tenancy instead.
+- Deny by default, like `RolesGuard`: new modules are gated unless they opt out with `@NoSubscription()`. Exempt routes are only those a locked-out or clinic-less user must still reach: `GET /me`, `POST /clinics`, `POST /staff-invites/accept`, `/billing/*`, and `/support-threads/*` (a clinic whose payment failed must still be able to ask for help — S4-1). `@Public()` routes (health, webhooks) and `SUPER_ADMIN` bypass entirely; a user with no clinic passes the guard and is stopped by tenancy instead.
 
 ### Gating the background workers (S3-7, D33)
 

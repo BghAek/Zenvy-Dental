@@ -16,7 +16,9 @@ No `console.log` in committed code — ESLint rule enforces.
 
 ## ErrorLog persistence
 
-The global NestJS exception filter (and BullMQ failed-job handler) writes every `error`-level event to the `ErrorLog` table: correlationId, clinicId, userId, module, severity, message, stack, context JSON. Owner portal error viewer = filterable table over this (by clinic, module, severity, date) + detail drawer. <!-- ponytail: Postgres as the error store; ship to a real APM (Sentry) when volume or alerting needs demand it -->
+The global NestJS exception filter (and BullMQ failed-job handler) writes every `error`-level event to the `ErrorLog` table: correlationId, clinicId, userId, module, severity, message, stack, context JSON. Owner portal error viewer = filterable table over this (by clinic, module, severity, date, correlation id) + detail drawer — `GET /ops/errors` (S4-1, `docs/api/ops.md`). <!-- ponytail: Postgres as the error store; ship to a real APM (Sentry) when volume or alerting needs demand it -->
+
+From the filter, **5xx only** (`module: 'http'`, severity `ERROR`, the raw exception message and stack, `{ method, path, status }` as context): a 4xx is the caller's mistake, and logging those would drown real breakage in validation noise. The row is written **before** the response goes out, so the reference code the user reads is already queryable when they report it; a failed write is logged and never blocks the response.
 
 ## AI cost logging (S3-6)
 

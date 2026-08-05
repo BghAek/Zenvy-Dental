@@ -35,7 +35,7 @@ Session identity + tenant context in one round trip. Any authenticated user.
 Creates the caller's clinic and starts the trial. Caller must be authenticated, **email-verified**, and not yet in a clinic.
 
 - Body → `createClinicRequestSchema`: `{ name, phone?, address?, timezone? }`. `timezone` defaults to `Europe/Paris`; phone is normalized to E.164. `slug` is server-generated from `name` (deduplicated) — never client-supplied.
-- Server-side effects, atomically: clinic created; caller becomes `CLINIC_OWNER` with `clinicId` set; `Subscription` row created with `status: TRIALING`, `plan: PREMIUM`, `trialEndsAt = now + 14 days` — no card required. AuditLog written.
+- Server-side effects, atomically: clinic created; caller becomes `CLINIC_OWNER` with `clinicId` set; `Subscription` row created with `status: TRIALING`, `plan: PREMIUM`, `trialEndsAt = now + 14 days` — no card required; a `PENDING` `OnboardingRequest` is enqueued for the founder (v1 connects every WhatsApp number by hand — `docs/api/ops.md`). AuditLog written.
 - **201** → `createClinicResponseSchema`: `{ clinic, subscription }`.
 - **403** `EMAIL_NOT_VERIFIED` · **409** `USER_ALREADY_IN_CLINIC` · **400** `VALIDATION_ERROR`.
 

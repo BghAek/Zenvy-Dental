@@ -26,8 +26,8 @@ A tenant-scoped query without a clinic context must throw, never silently return
 | `Subscription` | ✔ | stripeCustomerId, stripeSubscriptionId, plan (`premium`), status (`trialing/active/past_due/canceled`), trialEndsAt, statusEventAt (Stripe's timestamp for the last status event applied — the webhook's out-of-order guard, S3-7) |
 | `ScheduledMessage` | ✔ | patientId, appointmentId?, kind (`reminder_24h` \| `reminder_2h` \| `followup` \| `custom`), templateName, params, sendAt, status, BullMQ jobId |
 | `StaffInvite` | ✔ | pending staff invitation (docs/api/auth.md): email, tokenHash (unique), expiresAt (7d), acceptedAt? — invited role fixed to `CLINIC_STAFF` in v1; added by the S1-2 migration |
-| `OnboardingRequest` | ✔ | manual WhatsApp-onboarding queue item: status, notes, scheduledCallAt |
-| `SupportThread` / `SupportMessage` | ✔ | clinic ↔ owner support chat |
+| `OnboardingRequest` | ✔ | manual WhatsApp-onboarding queue item: status, notes, scheduledCallAt — one created per clinic at clinic-creation time (S4-1) |
+| `SupportThread` / `SupportMessage` | ✔ | clinic ↔ owner support chat. `SupportMessage` has **no `clinicId`**: it is scoped through its thread, so it sits in the tenant extension's `NON_TENANT_MODELS` and every clinic-facing access must go through `supportThread` first (`docs/api/ops.md` §Tenancy note) |
 | `ErrorLog` | ✔ (nullable) | correlationId, clinicId?, userId?, module, severity, message, stack, context JSON, createdAt |
 | `StripeEvent` | — (not tenant-scoped) | Stripe webhook idempotency ledger: Stripe's event id as PK, type, createdAt — a redelivered event inserts nothing and is skipped (S3-3) |
 | `AiUsage` | ✔ | one row per LLM call (S3-6): model, promptTokens, completionTokens, costMicroEur — the cost log, and the ledger the daily token budget guard sums |

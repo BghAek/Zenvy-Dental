@@ -164,6 +164,10 @@ export class IdentityController {
       if (claimed.count === 0) {
         throw new ApiException('USER_ALREADY_IN_CLINIC', 'Vous appartenez déjà à un cabinet.');
       }
+      // v1 connects every clinic's WhatsApp number by hand ("nous le connectons
+      // pour vous"), so a signup IS a queue item for the founder — this is the
+      // only producer of the onboarding queue (docs/api/ops.md).
+      await tx.onboardingRequest.create({ data: { clinicId: clinic.id } });
       await tx.auditLog.create({
         data: {
           clinicId: clinic.id,

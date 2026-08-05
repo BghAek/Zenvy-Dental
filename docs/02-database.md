@@ -23,7 +23,7 @@ A tenant-scoped query without a clinic context must throw, never silently return
 | `Conversation` | ✔ | patientId (nullable until matched), waContactPhone (unique per clinic — one thread per contact, the webhook's upsert key), status (`ai` \| `human` \| `closed`), urgentFlag, lastMessageAt |
 | `Message` | ✔ | conversationId, direction (`in/out`), author (`patient/ai/staff/system`), body, waMessageId, template used, delivery status |
 | `WhatsAppAccount` | ✔ | phoneNumberId (globally unique — the tenant-routing key), wabaId, displayNumber, verified status, tokens (encrypted) |
-| `Subscription` | ✔ | stripeCustomerId, stripeSubscriptionId, plan (`premium`), status (`trialing/active/past_due/canceled`), trialEndsAt |
+| `Subscription` | ✔ | stripeCustomerId, stripeSubscriptionId, plan (`premium`), status (`trialing/active/past_due/canceled`), trialEndsAt, statusEventAt (Stripe's timestamp for the last status event applied — the webhook's out-of-order guard, S3-7) |
 | `ScheduledMessage` | ✔ | patientId, appointmentId?, kind (`reminder_24h` \| `reminder_2h` \| `followup` \| `custom`), templateName, params, sendAt, status, BullMQ jobId |
 | `StaffInvite` | ✔ | pending staff invitation (docs/api/auth.md): email, tokenHash (unique), expiresAt (7d), acceptedAt? — invited role fixed to `CLINIC_STAFF` in v1; added by the S1-2 migration |
 | `OnboardingRequest` | ✔ | manual WhatsApp-onboarding queue item: status, notes, scheduledCallAt |

@@ -329,6 +329,10 @@ model Subscription {
   plan                 Plan               @default(PREMIUM)
   status               SubscriptionStatus @default(TRIALING)
   trialEndsAt          DateTime?
+  // Stripe's own timestamp for the last status-bearing event applied here.
+  // Stripe does not guarantee delivery order, so a late `updated(active)` after
+  // a `deleted(canceled)` would otherwise re-open a cancelled clinic (S3-7).
+  statusEventAt        DateTime?
   createdAt            DateTime           @default(now())
   updatedAt            DateTime           @updatedAt
 }

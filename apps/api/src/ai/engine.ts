@@ -1,4 +1,5 @@
 import { Logger } from '@nestjs/common';
+import { clinicPaysForService } from '../billing/subscription.guard';
 import { basePrisma, prisma } from '../prisma/client';
 import { getTenantContext } from '../tenancy/tenant-context';
 import { sendText } from '../whatsapp/graph';
@@ -126,6 +127,19 @@ async function run(conversationId: string): Promise<void> {
   if (!latest || latest.direction !== 'IN') return;
   if (Date.now() - latest.createdAt.getTime() > WINDOW_MS) {
     await warn(conversationId, 'Inbound message older than the 24h window: no AI reply');
+    return;
+  }
+
+  // Feature gating reaches the workers too (S3-7, D33): a clinic whose
+  // subscription is over gets no assistant at all — emergency path included,
+  // because we do not speak on behalf of a cabinet that is no longer a client.
+  // The message is already stored; a human owns the thread from here.
+  if (!(await clinicPaysForService(conversation.clinicId))) {
+    await warn(conversationId, 'Clinic subscription is not usable: no AI reply sent');
+    await prisma.conversation.update({
+      where: { id: conversationId },
+      data: { status: 'HUMAN' },
+    });
     return;
   }
 

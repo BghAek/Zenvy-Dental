@@ -98,6 +98,11 @@ describe('ai engine (S2-3)', () => {
             slug: `ai-${label}-${run}`,
             phone: '+33123456789',
             aiConfig: { horaires: '9h-19h', tarifs: 'consultation 30 €' },
+            // The engine is gated on the subscription too (S3-7), so every
+            // clinic here is a paying one unless a test says otherwise.
+            subscription: {
+              create: { trialEndsAt: new Date(Date.now() + 14 * 24 * 3600 * 1000) },
+            },
           },
         }),
       ),
@@ -324,6 +329,32 @@ describe('ai engine (S2-3)', () => {
       status: 'HUMAN',
       urgentFlag: true,
     });
+  });
+
+  it('answers nothing at all once the subscription is over (S3-7)', async () => {
+    // Unlike the token budget, this is not a flood ceiling but the end of the
+    // contract: even the free emergency path stays silent (D32). The patient's
+    // message is stored and the thread waits for a human either way.
+    await basePrisma.subscription.update({
+      where: { clinicId: clinicCapped.id },
+      data: { status: 'CANCELED', trialEndsAt: null },
+    });
+    try {
+      const urgent = await seedThread(clinicCapped.id, 'J’ai une douleur insupportable');
+      await runAsClinic(clinicCapped.id, () => replyToInbound(urgent.id));
+
+      expect(complete).not.toHaveBeenCalled();
+      expect(sendText).not.toHaveBeenCalled();
+      expect(await messagesOf(urgent.id)).toHaveLength(1);
+      expect((await basePrisma.conversation.findUnique({ where: { id: urgent.id } }))?.status).toBe(
+        'HUMAN',
+      );
+    } finally {
+      await basePrisma.subscription.update({
+        where: { clinicId: clinicCapped.id },
+        data: { status: 'TRIALING', trialEndsAt: new Date(Date.now() + 14 * 24 * 3600 * 1000) },
+      });
+    }
   });
 
   it('writes only under its own clinic (cross-tenant)', async () => {

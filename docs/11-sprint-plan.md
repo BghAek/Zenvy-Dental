@@ -53,7 +53,7 @@ Status legend: each task gets `⬜ todo / 🟨 in PR / ✅ merged` — update th
 | S3-4 ✅ | Web: settings pages — clinic profile, AI config (tone/services/prices/hours/FAQ), staff, subscription page (plan, trial countdown, checkout) | [A] Frontend | S3-3 contracts | Config round-trips to AI behavior |
 | S3-5 ✅ | Web: onboarding wizard — post-signup steps (clinic info → WhatsApp "we connect it for you" request → AI config), fallback booking for manual onboarding | [A] Frontend | S1-2 | New signup lands in owner queue |
 | S3-6 ✅ | AI hardening: expand evals (injection, anger, edge FR dialects), token budget guard, cost logging | [C] QA | S2-3 | Eval suite ≥95% pass in CI |
-| S3-7 | Security review: billing + gating | [C] Security | S3-3 | Findings fixed |
+| S3-7 ✅ | Security review: billing + gating | [C] Security | S3-3 | Findings fixed — `docs/reviews/s3-7-security-review.md` |
 
 ## Sprint 4 — Operate & polish (demo-ready, deployed)
 

@@ -54,7 +54,14 @@ describe('whatsapp inbound worker (S2-2)', () => {
     [clinicA, clinicB] = await Promise.all(
       (['a', 'b'] as const).map((l) =>
         basePrisma.clinic.create({
-          data: { name: `Cabinet ${l} ${run}`, slug: `wa-${l}-${run}` },
+          data: {
+            name: `Cabinet ${l} ${run}`,
+            slug: `wa-${l}-${run}`,
+            // The AI handoff at the end of the worker is subscription-gated (S3-7).
+            subscription: {
+              create: { trialEndsAt: new Date(Date.now() + 14 * 24 * 3600 * 1000) },
+            },
+          },
         }),
       ),
     );

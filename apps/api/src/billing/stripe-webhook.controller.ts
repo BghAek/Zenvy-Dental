@@ -71,6 +71,8 @@ export class StripeWebhookController {
         const session = event.data.object;
         const customerId = idOf(session.customer);
         const subscriptionId = idOf(session.subscription);
+        // No ordering guard here: this event carries ids, not status, and the
+        // ids of a stale session are the ones we already hold.
         await this.update(session.client_reference_id, customerId, {
           ...(customerId ? { stripeCustomerId: customerId } : {}),
           ...(subscriptionId ? { stripeSubscriptionId: subscriptionId } : {}),
@@ -85,12 +87,24 @@ export class StripeWebhookController {
         // `incomplete`: the first payment is still in flight — local state stands.
         if (!status) return;
         const customerId = idOf(subscription.customer);
-        await this.update(subscription.metadata?.clinicId, customerId, {
-          status,
-          stripeSubscriptionId: subscription.id,
-          ...(customerId ? { stripeCustomerId: customerId } : {}),
-          trialEndsAt: subscription.trial_end ? new Date(subscription.trial_end * 1000) : null,
-        });
+        // Undefined only if Stripe ever sends an event without `created`: the
+        // write then behaves exactly as it did before the ordering guard
+        // (applied, stamp untouched) rather than storing an Invalid Date.
+        const eventAt = Number.isFinite(event.created)
+          ? new Date(event.created * 1000)
+          : undefined;
+        await this.update(
+          subscription.metadata?.clinicId,
+          customerId,
+          {
+            status,
+            stripeSubscriptionId: subscription.id,
+            ...(customerId ? { stripeCustomerId: customerId } : {}),
+            trialEndsAt: subscription.trial_end ? new Date(subscription.trial_end * 1000) : null,
+            ...(eventAt ? { statusEventAt: eventAt } : {}),
+          },
+          eventAt,
+        );
         return;
       }
       default:
@@ -109,7 +123,9 @@ export class StripeWebhookController {
       stripeCustomerId?: string;
       stripeSubscriptionId?: string;
       trialEndsAt?: Date | null;
+      statusEventAt?: Date;
     },
+    eventAt?: Date,
   ): Promise<void> {
     const target = clinicId
       ? await basePrisma.subscription.findUnique({ where: { clinicId } })
@@ -119,6 +135,15 @@ export class StripeWebhookController {
     if (!target) {
       // Nothing to retry for: a redelivery would not make it match either.
       this.logger.warn(`Stripe event matched no clinic (customer ${customerId ?? 'unknown'})`);
+      return;
+    }
+    // Stripe delivers events in parallel and does NOT guarantee order, so a
+    // status write is refused when a strictly newer one already landed —
+    // otherwise a late `updated(active)` after `deleted` un-cancels a clinic
+    // for good, and no further event would ever correct it (S3-7). Strictly
+    // older only: same-second events keep arrival order, as before.
+    if (eventAt && target.statusEventAt && eventAt < target.statusEventAt) {
+      this.logger.warn(`Stripe event older than the applied state: ignored for ${target.clinicId}`);
       return;
     }
     // The await must happen INSIDE the context: a PrismaPromise runs the

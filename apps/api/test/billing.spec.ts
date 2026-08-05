@@ -61,13 +61,20 @@ describe('billing (S3-3)', () => {
       .send(payload);
   };
 
+  // Seconds, like Stripe's own `created`. Each call is one second later, so a
+  // test that needs an out-of-order pair just holds on to an earlier value.
+  let clock = Math.floor(Date.now() / 1000);
+  const nextEventTime = (): number => (clock += 1);
+
   const subscriptionEvent = (
     status: string,
     overrides: Record<string, unknown> = {},
     id = `evt_${run}_${randomUUID().slice(0, 8)}`,
+    created = nextEventTime(),
   ) => ({
     id,
     object: 'event',
+    created,
     type: 'customer.subscription.updated',
     data: {
       object: {
@@ -228,6 +235,28 @@ describe('billing (S3-3)', () => {
     });
   });
 
+  describe('event ordering (S3-7)', () => {
+    it('refuses a status event older than the one already applied', async () => {
+      // The pair Stripe fires on a cancellation, delivered the wrong way round:
+      // the stale `active` must not un-cancel the clinic.
+      const cancelAt = nextEventTime();
+      const staleActive = subscriptionEvent('active', {}, `evt_stale_${run}`, cancelAt - 60);
+
+      await postEvent({
+        ...subscriptionEvent('canceled', {}, `evt_cancel_${run}`, cancelAt),
+        type: 'customer.subscription.deleted',
+      }).expect(200);
+      expect((await subscriptionRow())?.status).toBe('CANCELED');
+
+      await postEvent(staleActive).expect(200);
+      expect((await subscriptionRow())?.status).toBe('CANCELED');
+
+      // A genuinely newer event still lands.
+      await postEvent(subscriptionEvent('active')).expect(200);
+      expect((await subscriptionRow())?.status).toBe('ACTIVE');
+    });
+  });
+
   describe('idempotency', () => {
     it('processes a replayed event id only once', async () => {
       const eventId = `evt_replay_${run}`;
@@ -266,6 +295,11 @@ describe('billing (S3-3)', () => {
 
       await setSubscription({ status: 'ACTIVE' });
       await listPatients(ownerCookie).expect(200);
+    });
+
+    it('blocks a TRIALING row with no end date (S3-7: unset ≠ unlimited)', async () => {
+      await setSubscription({ status: 'TRIALING', trialEndsAt: null });
+      await listPatients(ownerCookie).expect(402);
     });
 
     it('keeps /me and billing reachable while blocked', async () => {

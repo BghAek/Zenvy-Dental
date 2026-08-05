@@ -33,7 +33,8 @@ No card data, no prices, no payment UI in our apps. Both endpoints return a Stri
 Public route (no session), Stripe-signed. The **only** writer of subscription state — our endpoints never optimistically flip a status.
 
 - Signature verified with `stripe.webhooks.constructEvent` against the exact raw body before any payload use; mismatch, missing signature, or unconfigured secret → **403**, nothing parsed (`docs/04-security.md`).
-- **Idempotent by event id**: the id is inserted into `StripeEvent` first; an insert that hits the existing row means the event was already handled and it is acknowledged without re-processing. Stripe retries and at-least-once delivery are therefore harmless.
+- **Idempotent by event id**: an event whose id is already in `StripeEvent` is acknowledged without re-processing. The id is recorded *after* the work, not before — every effect is an idempotent state assignment, so replaying a retry is harmless, while marking it done first would let a mid-processing crash silence Stripe's retry for good.
+- **Ordered by the event's own timestamp** (S3-7): Stripe delivers in parallel and does *not* guarantee order, so a status-bearing event strictly older than the last one applied (`Subscription.statusEventAt`) is logged and dropped. Without it a late `customer.subscription.updated (active)` arriving after `.deleted` would un-cancel a clinic permanently — no further event would ever come to correct it. `checkout.session.completed` carries ids, not status, and is not ordered.
 - Always answers **200** once the signature checks out, including for event types we ignore — a 4xx/5xx would make Stripe retry an event we deliberately dropped.
 
 | Event | Effect |
@@ -60,16 +61,30 @@ A global guard (`SubscriptionGuard`, after `RolesGuard`) runs on every authentic
 
 ```
 usable = status === ACTIVE
-       || (status === TRIALING && (trialEndsAt === null || trialEndsAt > now))
+       || (status === TRIALING && trialEndsAt !== null && trialEndsAt > now)
 ```
 
 - **Trial expiry needs no job**: an expired trial is computed at request time from `trialEndsAt`, so a `TRIALING` row that ran out is already blocked.
+- A `TRIALING` row with **no** `trialEndsAt` is **not** usable (S3-7): an unset column must never read as an unlimited trial. Every legitimate `TRIALING` row has an end date — clinic creation sets 14 days, and Stripe always sends `trial_end` with a `trialing` status.
 - `PAST_DUE` blocks immediately. Stripe's smart retries take several days before flipping a subscription to `past_due`, so that delay *is* the grace period (decision D28).
 - Deny by default, like `RolesGuard`: new modules are gated unless they opt out with `@NoSubscription()`. Exempt routes are only those a locked-out or clinic-less user must still reach: `GET /me`, `POST /clinics`, `POST /staff-invites/accept`, and `/billing/*`. `@Public()` routes (health, webhooks) and `SUPER_ADMIN` bypass entirely; a user with no clinic passes the guard and is stopped by tenancy instead.
+
+### Gating the background workers (S3-7, D33)
+
+A guard only covers HTTP. The two paths that spend money without a request check the same rule themselves through `clinicPaysForService(clinicId)`:
+
+| Path | Behaviour when the subscription is not usable |
+|---|---|
+| AI engine (`ai/engine.ts`) — OpenAI + a WhatsApp send | No model call and no reply, **including the emergency path**: the service is over, so we do not write to patients on that cabinet's behalf. The inbound message is stored as always and the thread flips to `HUMAN`. |
+| Scheduled sender (`whatsapp/outbound.processor.ts`) — a paid template send | The row is marked `FAILED` with an `ErrorLog` entry. Not left `PENDING`: it would be re-swept every minute and crowd real sends out of the batch. |
+
+This is deliberately stricter than the AI token budget, which exempts emergencies (R6): a flood is an attack on a client we still serve, an ended subscription is the end of the service itself.
 
 ## Storage note (S3-3 migration)
 
 New `StripeEvent { id (Stripe event id, PK), type, createdAt }` — not tenant-scoped: it is the webhook's idempotency ledger, keyed by Stripe's own event id. `Subscription` is unchanged; its `stripeCustomerId` / `stripeSubscriptionId` columns are populated for the first time here.
+
+S3-7 adds `Subscription.statusEventAt` (nullable) — Stripe's own `created` timestamp for the last status-bearing event applied, the value the ordering guard above compares against. Null on every row that has never seen a subscription event.
 
 ## Environment
 

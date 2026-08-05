@@ -91,7 +91,14 @@ describe('scheduled sends (S3-2)', () => {
     [clinicA, clinicB] = await Promise.all(
       (['a', 'b'] as const).map((l) =>
         basePrisma.clinic.create({
-          data: { name: `Cabinet Lumière ${l}${run}`, slug: `sm-${l}-${run}` },
+          data: {
+            name: `Cabinet Lumière ${l}${run}`,
+            slug: `sm-${l}-${run}`,
+            // Reminders are subscription-gated (S3-7): a paying clinic by default.
+            subscription: {
+              create: { trialEndsAt: new Date(Date.now() + 14 * 24 * 3600 * 1000) },
+            },
+          },
         }),
       ),
     );
@@ -230,6 +237,27 @@ describe('scheduled sends (S3-2)', () => {
     expect((await reload(row.id))?.status).toBe('CANCELLED');
   });
 
+  it('sends nothing for a clinic whose subscription is over (S3-7)', async () => {
+    // Gating is not only an HTTP guard: a cancelled clinic must stop costing us
+    // template sends, and no worker sees the guard.
+    await basePrisma.subscription.update({
+      where: { clinicId: clinicB.id },
+      data: { status: 'CANCELED', trialEndsAt: null },
+    });
+    const row = await seed(clinicB.id, 'REMINDER_24H');
+    try {
+      await sendScheduled({ scheduledMessageId: row.id, clinicId: clinicB.id });
+
+      expect(sendTemplate).not.toHaveBeenCalled();
+      expect((await reload(row.id))?.status).toBe('FAILED');
+    } finally {
+      await basePrisma.subscription.update({
+        where: { clinicId: clinicB.id },
+        data: { status: 'TRIALING', trialEndsAt: ahead(14 * 24 * 60) },
+      });
+    }
+  });
+
   it('does not re-send a row that is no longer pending or not yet due', async () => {
     const alreadySent = await seed(clinicA.id, 'REMINDER_24H', { status: 'SENT' });
     const notDue = await seed(clinicA.id, 'REMINDER_24H', { sendAt: ahead(60) });
@@ -243,7 +271,13 @@ describe('scheduled sends (S3-2)', () => {
 
   it('fails the row permanently when the clinic has no WhatsApp number', async () => {
     const orphan = await basePrisma.clinic.create({
-      data: { name: `Cabinet sans numéro ${run}`, slug: `sm-none-${run}` },
+      data: {
+        name: `Cabinet sans numéro ${run}`,
+        slug: `sm-none-${run}`,
+        // Subscribed, so the row fails for the reason under test and not for
+        // the S3-7 gate that runs before it.
+        subscription: { create: { trialEndsAt: new Date(Date.now() + 14 * 24 * 3600 * 1000) } },
+      },
     });
     const row = await seed(orphan.id, 'REMINDER_24H');
 

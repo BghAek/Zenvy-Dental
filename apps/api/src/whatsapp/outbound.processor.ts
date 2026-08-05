@@ -1,4 +1,5 @@
 import { Logger } from '@nestjs/common';
+import { clinicPaysForService } from '../billing/subscription.guard';
 import type { ScheduledMessageKind } from '../generated/prisma/enums';
 import { basePrisma, prisma } from '../prisma/client';
 import { runAsClinic } from '../tenancy/tenant-context';
@@ -56,6 +57,15 @@ async function send(id: string): Promise<void> {
   // before Meta, and it also covers a patient deleted since scheduling.
   if (row.patient.optOut || row.patient.deletedAt) {
     await prisma.scheduledMessage.update({ where: { id }, data: { status: 'CANCELLED' } });
+    return;
+  }
+
+  // Feature gating reaches the workers too (S3-7, D33): a reminder is a paid
+  // template send, so a clinic whose subscription is over stops sending. FAILED
+  // rather than skipped: a row left PENDING would be re-swept every minute and
+  // would crowd real sends out of the batch.
+  if (!(await clinicPaysForService(row.clinicId))) {
+    await fail(row.clinicId, id, 'Clinic subscription is not usable: scheduled message not sent');
     return;
   }
 

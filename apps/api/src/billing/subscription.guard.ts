@@ -19,15 +19,25 @@ const NO_SUBSCRIPTION_KEY = 'zenvy:no-subscription';
 export const NoSubscription = () => SetMetadata(NO_SUBSCRIPTION_KEY, true);
 
 /** Trial expiry needs no scheduled job: an exhausted trial is computed here,
- *  from the same row the status lives on. */
+ *  from the same row the status lives on. A TRIALING row with no end date is
+ *  NOT usable — an unset column must never grant unlimited service (S3-7). */
 export const isSubscriptionUsable = (subscription: Subscription | null): boolean => {
   if (!subscription) return false;
   if (subscription.status === SubscriptionStatus.ACTIVE) return true;
   return (
     subscription.status === SubscriptionStatus.TRIALING &&
-    (subscription.trialEndsAt === null || subscription.trialEndsAt > new Date())
+    subscription.trialEndsAt !== null &&
+    subscription.trialEndsAt > new Date()
   );
 };
+
+/** The same question the guard asks, for the background workers that spend
+ *  money outside any HTTP request — the AI engine (OpenAI) and the scheduled
+ *  sender (Meta). Gating a route only stops the dashboard; a cancelled clinic
+ *  whose patients keep texting would otherwise keep billing us (S3-7).
+ *  basePrisma: the caller resolved the clinic itself, exactly like the guard. */
+export const clinicPaysForService = async (clinicId: string): Promise<boolean> =>
+  isSubscriptionUsable(await basePrisma.subscription.findUnique({ where: { clinicId } }));
 
 @Injectable()
 export class SubscriptionGuard implements CanActivate {

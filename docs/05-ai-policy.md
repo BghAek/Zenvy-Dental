@@ -22,6 +22,7 @@ Meta webhook → verify signature → 200 fast → enqueue (BullMQ)
   → resolve tenant by phone_number_id
   → upsert Conversation + store Message(in)
   → if status == human/closed → notify staff, STOP (AI silent)
+  → if the clinic's subscription is not usable → thread to human, STOP (S3-7, D33)
   → emergency classifier → if urgent: escalation path, STOP
   → context builder: aiConfig + last N messages + patient record + appointment info
   → LLM call (OpenAI, French system prompt implementing this policy)
@@ -32,7 +33,7 @@ Meta webhook → verify signature → 200 fast → enqueue (BullMQ)
 
 - Model: start `gpt-4o-mini` for cost, `gpt-4o` class where quality demands; provider isolated behind one `LlmService` so models/providers swap freely. Temperature low. Response length capped.
 - 24h rule: free-form replies only within Meta's 24h customer-service window; outside it, **approved templates only** (enforced in `whatsapp` module, not trusted to the LLM).
-- Cost guard (S3-6, D31): **per-clinic budget of `AI_DAILY_TOKEN_BUDGET` tokens (default 300 000) over a rolling 24h**, summed from the `AiUsage` cost log. Checked after the free emergency keyword pass and before the first paid call, so a message flood costs nothing and still cannot silence an escalation (R6). Over budget the thread flips to `HUMAN` with a `warn` `ErrorLog` — the owner-portal alert — and the message is stored and visible, just not answered. Replaces the S2-7 hourly reply cap (D21). <!-- ponytail: one flat budget for every clinic, per-plan budgets when >1 pricing tier is live -->
+- Cost guard (S3-6, D31): **per-clinic budget of `AI_DAILY_TOKEN_BUDGET` tokens (default 300 000) over a rolling 24h**, summed from the `AiUsage` cost log. Checked after the free emergency keyword pass and before the first paid call, so a message flood costs nothing and still cannot silence an escalation (R6). Over budget the thread flips to `HUMAN` with a `warn` `ErrorLog` — the owner-portal alert — and the message is stored and visible, just not answered. Replaces the S2-7 hourly reply cap (D21). Distinct from the subscription gate above (D33), which stops the assistant entirely — emergency path included — because the service itself has ended rather than one clinic having spent its day's budget. <!-- ponytail: one flat budget for every clinic, per-plan budgets when >1 pricing tier is live -->
 - Cost logging: one `AiUsage` row per LLM call (tokens + micro-euros priced at write time), which is what the guard sums — docs/06-observability.md §AI cost logging.
 
 ## Outbound automation (reminders / follow-ups)

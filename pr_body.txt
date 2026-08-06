@@ -1,0 +1,20 @@
+## What
+Implements the Owner Portal (S4-2) allowing the founder to operate v1 clinics.
+
+## Why & decisions
+This allows the administration of ZenvyDental using a custom-built interface that talks to the `SUPER_ADMIN` ops API routes.
+Decisions:
+- Scaffolded `apps/owner` mirroring the Vite + Tailwind setup of `apps/web`.
+- Used `@zenvy/ui` for all tables, states, and inputs to keep the design premium and consistent.
+- Four main routes mapped directly to the ops endpoints.
+
+## How to test
+1. Start the owner portal dev server: `pnpm --filter @zenvy/owner dev`
+2. Access the portal and verify the 4 routes: `/clients`, `/errors`, `/onboarding-requests`, `/support-threads`.
+
+## Verification done
+- `pnpm build` runs successfully in `apps/owner` with 0 type errors.
+- Visual inspection of the 4 pages.
+
+## Docs touched
+- `docs/11-sprint-plan.md` updated to mark S4-2 as in PR (🟨).

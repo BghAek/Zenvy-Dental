@@ -169,15 +169,42 @@ importers:
 
   apps/owner:
     dependencies:
+      '@hookform/resolvers':
+        specifier: ^5.4.0
+        version: 5.4.0(react-hook-form@7.82.0)
+      '@tanstack/react-query':
+        specifier: ^5.101.3
+        version: 5.101.3(react@19.2.7)
       '@zenvy/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@zenvy/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
+      date-fns:
+        specifier: ^4.4.0
+        version: 4.4.0
+      framer-motion:
+        specifier: ^11.3.19
+        version: 11.18.2(react-dom@19.2.7)(react@19.2.7)
+      lucide-react:
+        specifier: ^0.412.0
+        version: 0.412.0(react@19.2.7)
       react:
         specifier: ^19.2.7
         version: 19.2.7
       react-dom:
         specifier: ^19.2.7
         version: 19.2.7(react@19.2.7)
+      react-hook-form:
+        specifier: ^7.82.0
+        version: 7.82.0(react@19.2.7)
+      react-router-dom:
+        specifier: ^7.18.1
+        version: 7.18.1(react-dom@19.2.7)(react@19.2.7)
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
     devDependencies:
       '@types/react':
         specifier: ^19.2.17
@@ -188,6 +215,15 @@ importers:
       '@vitejs/plugin-react':
         specifier: ^6.0.3
         version: 6.0.3(vite@8.1.5)
+      autoprefixer:
+        specifier: ^10.4.19
+        version: 10.5.4(postcss@8.5.19)
+      postcss:
+        specifier: ^8.4.39
+        version: 8.5.19
+      tailwindcss:
+        specifier: ^3.4.7
+        version: 3.4.19
       typescript:
         specifier: ^5.9.0
         version: 5.9.3

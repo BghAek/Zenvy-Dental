@@ -60,7 +60,7 @@ Status legend: each task gets `⬜ todo / 🟨 in PR / ✅ merged` — update th
 | ID | Task | Owner | Depends | Deliverable |
 |---|---|---|---|---|
 | S4-1 ✅ | API: ops module — clients list, error-log query, onboarding queue actions, support threads (+ clinic-side support, D36) | [C] Backend | S3 merged | `docs/api/ops.md` + endpoints |
-| S4-2 | Owner portal: client list, error viewer (filter/detail), onboarding queue, support chat | [A] Frontend | S4-1 | Founder can operate v1 clinics |
+| S4-2 🟨 | Owner portal: client list, error viewer (filter/detail), onboarding queue, support chat | [A] Frontend | S4-1 | Founder can operate v1 clinics |
 | S4-3 | Landing: demo page — product videos, animated component showcases, "book a demo" CTA | [A] Frontend | S1-7 | The sales asset |
 | S4-4 | Demo clinic seed: rich French data — patients, appointments, believable conversation histories | [C] Backend | S3 merged | One-command demo environment |
 | S4-5 | E2E: Playwright — signup→trial, inbox round-trip, reminder schedule, takeover | [C] QA | S3 merged | E2E in CI |

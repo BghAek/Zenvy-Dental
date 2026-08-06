@@ -55,7 +55,19 @@ Postgres is Neon (external, serverless) — no local container (01-architecture 
 
 - Apply schema/migrations: `pnpm --filter @zenvy/api prisma migrate dev`
 - Regenerate the client (output is gitignored at `apps/api/src/generated/prisma`): `pnpm --filter @zenvy/api prisma generate`
-- Seed (SUPER_ADMIN + demo clinic « Cabinet Dentaire Lumière », idempotent): `pnpm --filter @zenvy/api prisma db seed`
+- Seed the demo environment (idempotent, re-run it any time): `pnpm --filter @zenvy/api prisma db seed`
+
+### The demo environment (S4-4)
+
+One command builds the whole sales demo (contents in 02-database §Seeding) and prints the logins it created. All three share the password **`Demo1234!`**:
+
+| Login | Where | Who |
+|---|---|---|
+| `admin@zenvydental.fr` | `apps/owner` | SUPER_ADMIN — clients, errors, onboarding queue, support |
+| `docteur@lumiere-dentaire.fr` | `apps/web` | Dr Claire Fontaine, CLINIC_OWNER of the demo clinic |
+| `secretariat@lumiere-dentaire.fr` | `apps/web` | Sarah Lemoine, CLINIC_STAFF |
+
+Every date is relative to now, so the data never looks stale — re-run the seed before a demo and today's inbox is today's. It refuses to run with `NODE_ENV=production` (D37).
 
 ## Auth (S0-5)
 

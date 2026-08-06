@@ -45,4 +45,13 @@ A tenant-scoped query without a clinic context must throw, never silently return
 
 ## Seeding
 
-`prisma/seed.ts` creates: 1 SUPER_ADMIN, 1 demo clinic ("Cabinet Dentaire Lumière") with French patients, appointments, and realistic conversation history — this IS the sales demo dataset, keep it excellent.
+`prisma/seed.ts` is the sales demo dataset — this IS what a prospect sees, keep it excellent. One command (`prisma db seed`) builds:
+
+- **« Cabinet Dentaire Lumière »** — the clinic for `apps/web`: 14 French patients (one opted out, one soft-deleted), 17 appointments spanning a fortnight either side of today, 8 WhatsApp threads, the `ScheduledMessage` rows those appointments imply in every status, and a week of `AiUsage`.
+- **Five more clinics** — for `apps/owner`: one subscription per state (`ACTIVE`, `TRIALING`, `PAST_DUE`, `CANCELED`), an onboarding queue, an error log including rows with no clinic, three support threads.
+- **Three logins** (S4-4, D37) — a SUPER_ADMIN plus the demo clinic's owner and staff, each with a Better Auth credential account, so the demo is walkable without creating a user by hand.
+
+Two invariants the seed relies on, both load-bearing for a demo that is run months from now:
+
+- **Idempotent.** Every seeded clinic is deleted and rebuilt; the cascade takes its tenant rows with it. Unattributed `ErrorLog` rows have no clinic to cascade from, so they carry a `demo-` correlation id and are deleted by it.
+- **Relative to now.** No absolute dates. Appointments are offsets from today in Europe/Paris and are nudged off the weekend, so the clinic's Mon–Fri hours hold whichever day the seed runs.

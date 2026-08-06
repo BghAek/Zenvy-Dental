@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../lib/api';
-import { opsErrorListResponseSchema, OpsError } from '@zenvy/shared/src/ops';
+import { opsErrorListResponseSchema, opsErrorSchema } from '@zenvy/shared/src/ops';
 import { EmptyState, Table, TableHeader, TableRow, TableHead, TableBody, TableCell, Badge, Input, Button } from '@zenvy/ui';
 import { Search, X, AlertCircle, AlertTriangle } from 'lucide-react';
 import { useState } from 'react';
@@ -99,7 +99,7 @@ export function ErrorsPage() {
 function ErrorDetailModal({ errorId, onClose }: { errorId: string; onClose: () => void }) {
   const { data, isLoading } = useQuery({
     queryKey: ['ops-error', errorId],
-    queryFn: () => api.get(`/ops/errors/${errorId}`, undefined as any) as Promise<OpsError>,
+    queryFn: () => api.get(`/ops/errors/${errorId}`, opsErrorSchema),
   });
 
   return (

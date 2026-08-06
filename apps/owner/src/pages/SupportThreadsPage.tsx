@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/api';
-import { supportThreadListResponseSchema, SupportThread } from '@zenvy/shared/src/ops';
+import { supportThreadListResponseSchema, supportThreadSchema, supportMessageSchema } from '@zenvy/shared/src/ops';
 import { EmptyState, Badge, Button, Input, cn } from '@zenvy/ui';
 import { useState, useRef, useEffect } from 'react';
 import { format } from 'date-fns';
@@ -90,11 +90,11 @@ function SupportThreadDetail({ threadId }: { threadId: string }) {
 
   const { data, isLoading } = useQuery({
     queryKey: ['ops-support-thread', threadId],
-    queryFn: () => api.get(`/ops/support-threads/${threadId}`, undefined as any) as Promise<SupportThread>,
+    queryFn: () => api.get(`/ops/support-threads/${threadId}`, supportThreadSchema),
   });
 
   const replyMutation = useMutation({
-    mutationFn: (body: string) => api.post(`/ops/support-threads/${threadId}/messages`, undefined as any, { body }),
+    mutationFn: (body: string) => api.post(`/ops/support-threads/${threadId}/messages`, supportMessageSchema, { body }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ops-support-thread', threadId] });
       queryClient.invalidateQueries({ queryKey: ['ops-support-threads'] });
@@ -104,7 +104,7 @@ function SupportThreadDetail({ threadId }: { threadId: string }) {
 
   const statusMutation = useMutation({
     mutationFn: (status: 'OPEN' | 'CLOSED') => 
-      api.patch(`/ops/support-threads/${threadId}`, undefined as any, { status }),
+      api.patch(`/ops/support-threads/${threadId}`, supportThreadSchema, { status }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ops-support-thread', threadId] });
       queryClient.invalidateQueries({ queryKey: ['ops-support-threads'] });

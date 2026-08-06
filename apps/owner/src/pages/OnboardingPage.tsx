@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/api';
-import { opsOnboardingRequestListResponseSchema, OpsOnboardingRequest, UpdateOpsOnboardingRequest } from '@zenvy/shared/src/ops';
+import { opsOnboardingRequestListResponseSchema, OpsOnboardingRequest, UpdateOpsOnboardingRequest, opsOnboardingRequestSchema } from '@zenvy/shared/src/ops';
 import { EmptyState, Table, TableHeader, TableRow, TableHead, TableBody, TableCell, Badge, Button, Input, Label } from '@zenvy/ui';
 import { useState } from 'react';
 import { format } from 'date-fns';
@@ -94,7 +94,7 @@ function OnboardingDetailModal({ request, onClose }: { request: OpsOnboardingReq
 
   const mutation = useMutation({
     mutationFn: (data: UpdateOpsOnboardingRequest) => 
-      api.patch(`/ops/onboarding-requests/${request.id}`, undefined as any, data),
+      api.patch(`/ops/onboarding-requests/${request.id}`, opsOnboardingRequestSchema, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ops-onboarding'] });
       onClose();
@@ -123,7 +123,7 @@ function OnboardingDetailModal({ request, onClose }: { request: OpsOnboardingReq
             <select 
               className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               value={status} 
-              onChange={(e) => setStatus(e.target.value as any)}
+              onChange={(e) => setStatus(e.target.value as OpsOnboardingRequest['status'])}
             >
               <option value="PENDING">PENDING</option>
               <option value="CALL_SCHEDULED">CALL_SCHEDULED</option>

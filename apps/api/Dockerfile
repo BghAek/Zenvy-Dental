@@ -10,7 +10,11 @@ RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
     pnpm install --frozen-lockfile --filter @zenvy/api...
 COPY packages/shared packages/shared
 COPY apps/api apps/api
-RUN pnpm --filter @zenvy/api... build
+# `prisma generate` resolves prisma.config.ts, which insists on a DATABASE_URL
+# even though it never connects. A placeholder keeps the real one out of the
+# image; the runtime reads it from the environment (docs/14-deploy.md).
+RUN DATABASE_URL=postgresql://placeholder:placeholder@localhost:5432/placeholder \
+    pnpm --filter @zenvy/api... build
 RUN pnpm --filter @zenvy/api deploy --prod /out
 
 FROM node:22-alpine

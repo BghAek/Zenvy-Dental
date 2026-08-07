@@ -38,5 +38,5 @@ Meta / Stripe / OpenAI calls: timeouts set, retries with backoff where idempoten
 
 ## Health & uptime
 
-- `GET /health`: DB ping, Redis ping, BullMQ queue depth → `{status, checks}`. Nginx exposes it for a free uptime monitor (UptimeRobot) hitting production.
+- `GET /health`: DB ping, Redis ping, BullMQ queue depth → `{ status, checks: { db, redis, queueDepth } }`. Nginx exposes it at `api.zenvydental.fr/health` for a free uptime monitor (UptimeRobot) hitting production — a **keyword** monitor on `"status":"ok"`, because the endpoint answers **200 even when degraded** (D41). Probes connect per call and time out at 5 s: a health check that hangs is a monitor that never alerts.
 - System-health dashboard UI in owner portal: v2 (the endpoint exists from v1).

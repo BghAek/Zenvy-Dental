@@ -1,0 +1,71 @@
+# Production stack for the Contabo VPS — runbook in docs/14-deploy.md.
+#
+# Standalone rather than an override of docker-compose.yml on purpose: the local
+# file mounts host build directories at /srv/landing, and a compose merge keys
+# volumes by container path, so it would mount that (empty, on the server) over
+# the static files baked into the image. Three services; keep them in step by hand.
+services:
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    env_file: .env
+    environment:
+      PORT: 3001
+      REDIS_URL: redis://redis:6379
+    # No published port: nginx reaches it over the compose network. Publishing
+    # one would expose it to the internet whatever ufw says — Docker writes its
+    # own iptables rules (docs/14-deploy.md §Firewall).
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1:3001/health | grep -q ''"status":"ok"''']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: ['redis-server', '--appendonly', 'yes']
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  nginx:
+    build:
+      context: .
+      dockerfile: infra/nginx/Dockerfile
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./infra/nginx/prod.conf:/etc/nginx/conf.d/default.conf:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    # Started, not healthy: a database blip must not take the marketing site
+    # down with the API.
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  # One-off, run by infra/deploy.sh before the new API starts. It uses the API
+  # image's build stage, the only place the Prisma CLI and the migrations exist
+  # — the runtime image is a production-only `pnpm deploy`.
+  migrate:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      target: build
+    env_file: .env
+    command: ['pnpm', '--filter', '@zenvy/api', 'exec', 'prisma', 'migrate', 'deploy']
+    profiles: ['tools']
+
+volumes:
+  redis-data:

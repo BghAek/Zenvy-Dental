@@ -61,10 +61,10 @@ Rules that must never be violated:
 
 ## Infrastructure
 
-- **Contabo VPS** — Docker Compose: `api`, `redis`, `nginx` (serves the three built frontends as static files + reverse-proxies `/api`).
+- **Contabo VPS** — Docker Compose: `api`, `redis`, `nginx` (serves the three built frontends as static files + reverse-proxies `/api`). The frontends are built into the nginx image, so the server needs only Docker and git (S4-6, D40).
 - **Neon Postgres** (external, serverless). **Redis** runs on the VPS (BullMQ requires real Redis).
-- Nginx + Let's Encrypt on `zenvydental.fr`: `/` → landing, `app.` → web, `ops.` → owner, `api.` → NestJS.
-- CI: GitHub Actions — lint, typecheck, test, build on every PR. Deploy: SSH + `docker compose up -d` script (manual trigger in v1).
+- Nginx + Let's Encrypt on `zenvydental.fr`: `/` → landing, `app.` → web, `ops.` → owner, `api.` → NestJS. One certificate covers all five names; each SPA vhost proxies `/api` on its own origin, so cookies stay same-origin and CORS stays empty.
+- CI: GitHub Actions — lint, typecheck, test, build on every PR. Deploy: SSH + `infra/deploy.sh` (manual trigger in v1). Full runbook — bootstrap, DNS, TLS, backups, uptime: **docs/14-deploy.md**.
 
 ## Environments
 

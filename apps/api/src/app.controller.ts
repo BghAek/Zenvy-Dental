@@ -2,14 +2,14 @@ import { Controller, Get, Req } from '@nestjs/common';
 import type { Request } from 'express';
 import { Public, Roles } from './auth/rbac';
 import { Role } from './generated/prisma/enums';
+import { healthReport, type HealthReport } from './health';
 
 @Controller()
 export class AppController {
-  // ponytail: static ok; DB/Redis pings + queue depth land with BullMQ (06-observability)
   @Public()
   @Get('health')
-  health(): { status: string } {
-    return { status: 'ok' };
+  health(): Promise<HealthReport> {
+    return healthReport();
   }
 
   // The S0-5 deliverable: proves session resolution + RBAC end to end.

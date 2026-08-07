@@ -22,7 +22,8 @@ describe('auth flow', () => {
   });
 
   it('serves /health publicly', async () => {
-    await request(app.getHttpServer()).get('/health').expect(200, { status: 'ok' });
+    // Body shape is asserted in health.spec.ts; this one only proves it is public.
+    await request(app.getHttpServer()).get('/health').expect(200);
   });
 
   it('rejects /api/v1/hello without a session (401)', async () => {

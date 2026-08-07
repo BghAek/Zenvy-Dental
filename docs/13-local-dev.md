@@ -1,6 +1,6 @@
 # 13 — Local Development Guide
 
-How to run ZenvyDental on a dev machine. Mirrors production topology (01-architecture §Deployment) minus TLS/subdomains.
+How to run ZenvyDental on a dev machine. Mirrors production topology (01-architecture §Deployment) minus TLS/subdomains — the production stack itself is docs/14-deploy.md.
 
 ## Prerequisites
 
@@ -26,12 +26,20 @@ docker compose up --build
 | redis | redis:7-alpine (appendonly) | 6379 | cache + BullMQ |
 | nginx | nginx:1.27-alpine | 8080 | reverse proxy: `/health` + `/api/*` → api; `/` → landing static build |
 
+Every port is published on `127.0.0.1` only — Docker's port publishing writes
+iptables rules that a host firewall never sees, so a `0.0.0.0` bind is a public
+listener on any machine with a public IP (docs/14-deploy.md §Firewall).
+
 Smoke test:
 
 ```bash
-curl http://localhost:8080/health   # {"status":"ok"} via nginx
+curl http://localhost:8080/health   # {"status":"ok","checks":{...}} via nginx
 curl http://localhost:3001/health   # same, direct to the API container
 ```
+
+`status` is `degraded` (still HTTP 200) when Postgres or Redis is unreachable,
+and `checks` names which — the same signal production's uptime monitor reads
+(docs/06 §Health & uptime).
 
 Nginx serves `apps/landing/out/` at `/` — run `pnpm --filter @zenvy/landing build` first if you want the landing page locally (the API works without it).
 

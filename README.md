@@ -22,6 +22,7 @@ Everything about this project lives in [docs/](docs/). Agents and humans alike:
 | [11-sprint-plan](docs/11-sprint-plan.md) | v1 sprints S0–S4, parallel task tables |
 | [12-risks-decisions](docs/12-risks-decisions.md) | Decision log (append-only) + risk register |
 | [13-local-dev](docs/13-local-dev.md) | Running the stack locally (Docker + pnpm) |
+| [14-deploy](docs/14-deploy.md) | Production: VPS bootstrap, TLS, deploy, backups, uptime |
 
 Agent rulebooks: [CLAUDE.md](CLAUDE.md) (Claude Code) · [AGENTS.md](AGENTS.md) (Antigravity).
 

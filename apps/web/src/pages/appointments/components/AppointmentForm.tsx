@@ -6,7 +6,17 @@ import { z } from 'zod';
 import { usePatients } from '../../../lib/queries/patients';
 import { format } from 'date-fns';
 
-type FormValues = z.input<typeof createAppointmentRequestSchema>;
+// `datetime-local` yields `yyyy-MM-ddTHH:mm` in the clinic's local time, which
+// the wire schema (ISO-8601 UTC) rejects — validating the form against it left
+// the submit button doing nothing. The form validates what the input produces;
+// onSubmit converts to the contract shape.
+const appointmentFormSchema = createAppointmentRequestSchema.extend({
+  startsAt: z
+    .string()
+    .refine((value) => !Number.isNaN(Date.parse(value)), 'Date et heure invalides.'),
+});
+
+type FormValues = z.input<typeof appointmentFormSchema>;
 
 interface AppointmentFormProps {
   initialData?: Partial<CreateAppointmentRequest>;
@@ -22,7 +32,7 @@ export function AppointmentForm({ initialData, onSubmit, isLoading, isEdit = fal
   const patients = patientsData?.pages.flatMap((page) => page.items) || [];
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(createAppointmentRequestSchema),
+    resolver: zodResolver(appointmentFormSchema),
     defaultValues: {
       patientId: initialData?.patientId || '',
       startsAt: initialData?.startsAt ? format(new Date(initialData.startsAt), "yyyy-MM-dd'T'HH:mm") : format(new Date(), "yyyy-MM-dd'T'10:00"),

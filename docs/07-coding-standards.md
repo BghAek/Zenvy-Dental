@@ -21,7 +21,7 @@ Applies to both agents (Claude Code, Antigravity) and any human contributor.
 
 - Test what can break, not what can't: business logic (trial expiry, scheduling windows, tenant guards, AI guardrails, webhook idempotency) gets real unit tests; trivial CRUD pass-throughs don't.
 - **Mandatory coverage:** tenant-isolation test per tenant-scoped module; AI eval set green (see 05); webhook signature + idempotency tests; billing state transitions.
-- E2E: one Playwright happy-path per critical flow (signup→trial, inbox send/receive, reminder scheduling) — added in S4, not before.
+- E2E: one Playwright happy-path per critical flow (signup→trial, inbox send/receive, reminder scheduling) — `packages/e2e`, run in CI (S4-5, docs/13 §E2E). They drive the real stack; a flow that needs the product mocked to pass is not an E2E test.
 - TDD (superpowers:test-driven-development) for non-trivial backend logic; UI components are verified visually + by contract, not snapshot-tested to death.
 
 ## Git & PR conventions

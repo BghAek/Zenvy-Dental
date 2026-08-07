@@ -62,6 +62,7 @@ export function SendBox({ conversation }: SendBoxProps) {
       />
       <Button
         type="submit"
+        aria-label="Envoyer"
         disabled={!body.trim() || sendMessage.isPending}
         size="icon"
       >

@@ -1,4 +1,4 @@
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { Spinner, Alert, AlertDescription, Button } from '@zenvy/ui';
 import { ApiError } from '@zenvy/shared';
 import { useMe } from '../../lib/queries/session';
@@ -8,6 +8,7 @@ import { useMe } from '../../lib/queries/session';
 // of logging the user out, so a transient blip doesn't bounce them to login.
 export function RequireAuth() {
   const { data, isLoading, isError, error, refetch } = useMe();
+  const location = useLocation();
 
   if (isLoading) {
     return (
@@ -35,8 +36,10 @@ export function RequireAuth() {
     );
   }
 
-  // If user is authenticated but has no clinic, redirect to onboarding
-  if (!isLoading && !isError && !error && data && !data.clinic) {
+  // If user is authenticated but has no clinic, redirect to onboarding — unless
+  // they are already in the wizard, which lives behind this same guard: sending
+  // it back to itself loops and renders nothing at all.
+  if (data && !data.clinic && !location.pathname.startsWith('/onboarding')) {
     return <Navigate to="/onboarding" replace />;
   }
 

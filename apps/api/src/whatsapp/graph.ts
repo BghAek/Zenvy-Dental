@@ -4,6 +4,10 @@ import type { WhatsAppTemplate } from './templates';
 // Frontends never call Meta directly (CLAUDE.md §Hard rules).
 
 const GRAPH_VERSION = 'v21.0';
+/** Meta, unless a run points somewhere else — only the E2E suite does, at its
+ *  local stub (packages/e2e/meta-stub.mjs), so the outbound leg is exercised
+ *  without a WhatsApp number. Unset in every real environment. */
+const graphBase = (): string => process.env.META_GRAPH_BASE_URL ?? 'https://graph.facebook.com';
 
 interface SendResponse {
   messages?: { id?: string }[];
@@ -18,7 +22,7 @@ async function send(phoneNumberId: string, payload: object): Promise<string> {
   const token = process.env.META_ACCESS_TOKEN;
   if (!token || token === 'CHANGE_ME') throw new Error('META_ACCESS_TOKEN is not configured');
 
-  const res = await fetch(`https://graph.facebook.com/${GRAPH_VERSION}/${phoneNumberId}/messages`, {
+  const res = await fetch(`${graphBase()}/${GRAPH_VERSION}/${phoneNumberId}/messages`, {
     method: 'POST',
     headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
     body: JSON.stringify({ messaging_product: 'whatsapp', ...payload }),

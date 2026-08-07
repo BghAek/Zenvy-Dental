@@ -4,6 +4,8 @@ build/
 .next/
 out/
 coverage/
+playwright-report/
+test-results/
 apps/api/src/generated/
 next-env.d.ts
 *.tsbuildinfo

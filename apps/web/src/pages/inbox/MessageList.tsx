@@ -40,7 +40,7 @@ export function MessageList({ conversationId }: MessageListProps) {
   const reversedMessages = [...allMessages].reverse();
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 flex flex-col">
+    <div data-testid="message-list" className="flex-1 overflow-y-auto p-4 flex flex-col">
       {hasNextPage && (
         <div className="flex justify-center mb-4">
           <Button

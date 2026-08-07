@@ -100,6 +100,24 @@ Each case costs two `gpt-4o-mini` calls at most (the whole corpus is a fraction 
 
 `AI_DAILY_TOKEN_BUDGET` (default 300 000) caps what one clinic's assistant spends in a rolling 24h — set it low in a local `.env` to watch a thread flip to `HUMAN` on budget exhaustion.
 
+### E2E (S4-5)
+
+`packages/e2e` drives the real stack with Playwright: the built dashboard, the built API, Postgres, Redis and the demo seed. One happy path per critical flow — signup→trial, inbox round-trip with takeover, reminder scheduling. Playwright starts every server itself; you provide a **seeded, disposable** database (the run refuses to start without an explicit `DATABASE_URL`, and the seed it needs rebuilds clinics).
+
+```bash
+pnpm build                                       # the suite runs the built API and dashboard
+docker compose up redis                          # the inbound message travels through BullMQ
+pnpm --filter @zenvy/e2e exec playwright install chromium   # once per machine
+DATABASE_URL=postgresql://postgres:zenvy@localhost:5433/zenvy \
+  pnpm --filter @zenvy/api prisma db seed
+DATABASE_URL=postgresql://postgres:zenvy@localhost:5433/zenvy \
+  pnpm --filter @zenvy/e2e e2e
+```
+
+Nothing in the product is mocked. The only stand-ins are a local Meta Graph stub (`packages/e2e/meta-stub.mjs`, wired in by `META_GRAPH_BASE_URL` — unset everywhere else) and a deliberately absent `OPENAI_API_KEY`, which keeps the assistant silent so the takeover flow is deterministic (D38). The dashboard is served by `vite preview`, whose `/api` proxy puts it on the same origin as the API, like nginx in production.
+
+`--ui` for the interactive runner, `--debug` to step through, `pnpm --filter @zenvy/e2e exec playwright show-trace test-results/<test>/trace.zip` after a red run. CI runs the same command and uploads the HTML report when it fails.
+
 ### Stripe webhook (S3-3)
 
 Stripe cannot reach `localhost`, so the CLI forwards for you. The printed `whsec_…` is the `STRIPE_WEBHOOK_SECRET` for that session:

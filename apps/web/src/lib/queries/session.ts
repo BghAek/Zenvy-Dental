@@ -12,41 +12,10 @@ export function useMe() {
   return useQuery({
     queryKey: sessionKeys.me,
     queryFn: async () => {
-      let data;
-      try {
-        data = await api.get('/me', meResponseSchema);
-      } catch (err) {
-        console.warn('API is unavailable, using mock session.', err);
-        data = {
-          user: {
-            id: 'mock-user-id',
-            email: 'docteur@lumiere-dentaire.fr',
-            name: 'Dr Claire Fontaine',
-            emailVerified: true,
-            role: 'CLINIC_OWNER' as const,
-            clinicId: 'mock-clinic-id',
-          },
-          clinic: {
-            id: 'mock-clinic-id',
-            name: 'Cabinet Dentaire Lumière',
-            slug: 'cabinet-dentaire-lumiere',
-            phone: '+33145887766',
-            address: '12 rue de la Paix, 75002 Paris',
-            timezone: 'Europe/Paris',
-            locale: 'fr',
-            onboardingStatus: 'COMPLETED' as const,
-            createdAt: '2026-07-19T00:00:00.000Z',
-            updatedAt: '2026-07-19T00:00:00.000Z',
-          },
-          subscription: {
-            id: 'mock-sub-id',
-            plan: 'PREMIUM' as const,
-            status: 'TRIALING' as const,
-            trialEndsAt: new Date(Date.now() + 9 * 24 * 60 * 60 * 1000).toISOString(),
-          },
-        };
-      }
-      
+      // No fallback session: an unreachable API must surface as an error, not
+      // as a signed-in dentist (RequireAuth renders the retry state).
+      const data = await api.get('/me', meResponseSchema);
+
       // Merge mock clinic changes from localStorage if present
       if (data.clinic) {
         const storedClinic = localStorage.getItem('zenvy_mock_clinic');

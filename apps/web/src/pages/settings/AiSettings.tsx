@@ -256,7 +256,7 @@ export function AiSettings() {
 
           {!isOwner && (
             <p className="text-xs text-muted-foreground mt-4 italic">
-              * Seul le propriétaire du cabinet (CLINIC_OWNER) est autorisé à modifier la configuration IA.
+              * Seul le propriétaire du cabinet est autorisé à modifier la configuration IA.
             </p>
           )}
         </form>

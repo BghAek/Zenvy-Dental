@@ -83,7 +83,12 @@ export function SubscriptionSettings() {
   if (!subscription) {
     return (
       <Alert variant="destructive">
-        <AlertDescription>Aucun abonnement trouvé pour ce cabinet.</AlertDescription>
+        <AlertDescription className="flex items-center justify-between">
+          <span>Aucun abonnement trouvé pour ce cabinet.</span>
+          <Button variant="outline" size="sm" onClick={() => window.location.href = 'mailto:contact@zenvydental.fr'} className="ml-4">
+            Contacter le support
+          </Button>
+        </AlertDescription>
       </Alert>
     );
   }
@@ -245,7 +250,7 @@ export function SubscriptionSettings() {
                 variant="outline"
                 onClick={handlePortal}
                 disabled={portalMutation.isPending}
-                className="shrink-0 font-semibold cursor-pointer"
+                className="shrink-0 font-semibold"
               >
                 {portalMutation.isPending ? <Spinner className="mr-2 h-4 w-4" /> : null}
                 Gérer l'abonnement sur Stripe
@@ -265,7 +270,7 @@ export function SubscriptionSettings() {
               <Button
                 onClick={handleCheckout}
                 disabled={checkoutMutation.isPending}
-                className="shrink-0 font-semibold cursor-pointer"
+                className="shrink-0 font-semibold"
               >
                 {checkoutMutation.isPending ? <Spinner className="mr-2 h-4 w-4" /> : null}
                 Réactiver mon compte

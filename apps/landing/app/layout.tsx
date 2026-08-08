@@ -20,7 +20,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <nav className="flex items-center space-x-6 text-sm font-medium">
               <Link href="/tarifs" className="transition-colors hover:text-foreground/80 text-foreground/60">Tarifs</Link>
               <Link href="/demo" className="transition-colors hover:text-foreground/80 text-foreground/60">Réserver une démo</Link>
-              <a href="http://app.zenvydental.local" className="transition-colors hover:text-foreground/80 text-foreground/60">Connexion</a>
+              <a href={process.env.NEXT_PUBLIC_APP_URL ?? 'https://app.zenvydental.fr'} className="transition-colors hover:text-foreground/80 text-foreground/60">Connexion</a>
             </nav>
           </div>
         </header>
@@ -30,7 +30,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <footer className="border-t py-6 md:py-0">
           <div className="container flex flex-col items-center justify-between gap-4 md:h-24 md:flex-row px-8">
             <p className="text-center text-sm leading-loose text-muted-foreground md:text-left">
-              &copy; {new Date().getFullYear()} ZenvyDental. Tous droits réservés.
+              &copy; 2026 ZenvyDental. Tous droits réservés.
             </p>
             <div className="flex items-center space-x-4 text-sm text-muted-foreground">
               <Link href="/mentions-legales" className="hover:underline">Mentions légales</Link>

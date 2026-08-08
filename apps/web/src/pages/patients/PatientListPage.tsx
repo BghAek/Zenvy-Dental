@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { PATIENT_SOURCE_LABELS } from '@zenvy/shared';
 import { usePatients } from '../../lib/queries/patients';
 import {
   Table,
@@ -120,7 +121,7 @@ export function PatientListPage() {
                       ))}
                     </div>
                   </TableCell>
-                  <TableCell>{patient.source === 'MANUAL' ? 'Manuel' : 'Système'}</TableCell>
+                  <TableCell>{PATIENT_SOURCE_LABELS[patient.source] || patient.source}</TableCell>
                   <TableCell className="text-right">
                     <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/patients/${patient.id}/edit`); }}>
                       Modifier

@@ -35,7 +35,7 @@ interface InviteFormValues {
 
 export function StaffSettings() {
   const { data: me } = useMe();
-  const { data: staffData, isLoading: isStaffLoading, error: staffError } = useStaffList(
+  const { data: staffData, isLoading: isStaffLoading, error: staffError, refetch } = useStaffList(
     me?.user.email,
     me?.user.name
   );
@@ -106,8 +106,11 @@ export function StaffSettings() {
   if (staffError) {
     return (
       <Alert variant="destructive">
-        <AlertDescription>
-          Impossible de charger la liste des membres.
+        <AlertDescription className="flex items-center justify-between">
+          <span>Impossible de charger la liste des membres.</span>
+          <Button variant="outline" size="sm" onClick={() => refetch()} className="ml-4 bg-background">
+            Réessayer
+          </Button>
         </AlertDescription>
       </Alert>
     );
@@ -117,7 +120,7 @@ export function StaffSettings() {
 
   if (!isOwner) {
     return (
-      <Card className="border-destructive/20 bg-destructive/5 text-destructive-foreground">
+      <Card className="border-destructive/20 text-destructive">
         <CardHeader className="flex flex-row items-center gap-3">
           <ShieldAlert className="h-6 w-6 text-destructive" />
           <div>
@@ -222,8 +225,8 @@ export function StaffSettings() {
                           size="icon"
                           onClick={() => handleRemoveMember(member.id, member.name)}
                           disabled={removeStaff.isPending}
-                          title="Retirer de l'équipe"
-                          className="hover:bg-destructive/10 hover:text-destructive cursor-pointer"
+                          aria-label="Retirer de l'équipe"
+                          className="hover:bg-destructive/10 hover:text-destructive"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -274,8 +277,8 @@ export function StaffSettings() {
                         size="icon"
                         onClick={() => handleRevokeInvite(invite.id, invite.email)}
                         disabled={revokeInvite.isPending}
-                        title="Annuler l'invitation"
-                        className="hover:bg-slate-200 cursor-pointer"
+                        aria-label="Annuler l'invitation"
+                        className="hover:bg-slate-200"
                       >
                         <UserX className="h-4 w-4 text-muted-foreground hover:text-foreground" />
                       </Button>

@@ -27,7 +27,7 @@ export default function DemoPage() {
             <p className="text-lg text-muted-foreground">
               Notre assistant IA répond aux questions de vos patients et planifie des rendez-vous directement sur WhatsApp. Finis les appels manqués et les longues attentes au téléphone.
             </p>
-            <div className="pt-4 max-w-md hidden lg:block">
+            <div className="pt-4 w-full max-w-md">
               <VideoPlaceholder title="Vidéo : L'expérience patient sur WhatsApp" />
             </div>
           </div>
@@ -48,7 +48,7 @@ export default function DemoPage() {
             <p className="text-lg text-muted-foreground">
               Programmez des rappels automatiques avant chaque rendez-vous. Réduisez l'absentéisme et optimisez l'agenda de votre cabinet sans effort supplémentaire pour votre équipe.
             </p>
-            <div className="pt-4 max-w-md hidden lg:block">
+            <div className="pt-4 w-full max-w-md">
               <VideoPlaceholder title="Vidéo : Configuration des rappels" />
             </div>
           </div>

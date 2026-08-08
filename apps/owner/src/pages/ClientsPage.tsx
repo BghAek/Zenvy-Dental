@@ -16,9 +16,9 @@ export function ClientsPage() {
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-900">Clients</h1>
+        <h1 className="text-2xl font-bold text-foreground">Clients</h1>
         <div className="relative w-64">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-500" />
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input 
             placeholder="Rechercher..." 
             className="pl-9" 
@@ -30,8 +30,8 @@ export function ClientsPage() {
 
       {isLoading ? (
         <div className="animate-pulse flex flex-col space-y-4">
-          <div className="h-10 bg-slate-200 rounded"></div>
-          <div className="h-32 bg-slate-100 rounded"></div>
+          <div className="h-10 bg-muted rounded"></div>
+          <div className="h-32 bg-muted/50 rounded"></div>
         </div>
       ) : isError ? (
         <EmptyState icon={AlertCircle} title="Erreur" description="Impossible de charger les clients." />
@@ -54,8 +54,8 @@ export function ClientsPage() {
               {data.items.map((client) => (
                 <TableRow key={client.id}>
                   <TableCell>
-                    <div className="font-medium text-slate-900">{client.name}</div>
-                    <div className="text-xs text-slate-500">{client.slug}</div>
+                    <div className="font-medium text-foreground">{client.name}</div>
+                    <div className="text-xs text-muted-foreground">{client.slug}</div>
                   </TableCell>
                   <TableCell>{client.phone || '-'}</TableCell>
                   <TableCell>
@@ -65,15 +65,15 @@ export function ClientsPage() {
                     {client.subscription ? (
                       <div className="flex flex-col gap-1">
                         <Badge>{client.subscription.status}</Badge>
-                        <span className="text-xs text-slate-500">{client.subscription.plan}</span>
+                        <span className="text-xs text-muted-foreground">{client.subscription.plan}</span>
                       </div>
                     ) : (
-                      <span className="text-slate-400">-</span>
+                      <span className="text-muted-foreground">-</span>
                     )}
                   </TableCell>
                   <TableCell>
                     {client.whatsappConnected ? (
-                      <Badge variant="default" className="bg-green-100 text-green-800 hover:bg-green-100">Connecté</Badge>
+                      <Badge variant="default" className="bg-success text-success-foreground hover:bg-success/80">Connecté</Badge>
                     ) : (
                       <Badge variant="secondary">Non connecté</Badge>
                     )}

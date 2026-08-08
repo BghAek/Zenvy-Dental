@@ -13,9 +13,9 @@ export function OwnerLayout() {
   return (
     <div className="min-h-screen bg-background flex">
       {/* Sidebar */}
-      <aside className="w-64 border-r border-border bg-white flex flex-col">
+      <aside className="w-64 border-r border-border bg-card flex flex-col">
         <div className="h-16 flex items-center px-6 border-b border-border">
-          <span className="font-bold text-lg text-primary">Zenvy Admin</span>
+          <span className="font-bold text-lg text-primary">Zenvy Ops</span>
         </div>
         <nav className="flex-1 p-4 space-y-1">
           {navItems.map((item) => (
@@ -26,8 +26,8 @@ export function OwnerLayout() {
                 cn(
                   'flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors',
                   isActive
-                    ? 'bg-slate-100 text-slate-900'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                    ? 'bg-secondary text-secondary-foreground'
+                    : 'text-muted-foreground hover:bg-secondary/50 hover:text-foreground'
                 )
               }
             >

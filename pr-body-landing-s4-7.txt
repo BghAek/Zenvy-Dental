@@ -1,0 +1,32 @@
+## What
+Implemented S4-7 copy polish audit tasks for the `apps/landing` app.
+- Added `not-found.tsx` with standard French copy.
+- Created `strings/index.ts` to manage landing page specific copy.
+- Added `/mentions-legales` and `/confidentialite` empty route stubs with standard layout.
+- Updated `tarifs/page.tsx` with standard plan disabled state ("Bientôt disponible") linking to demo, updated pricing formatting to use `HT` and non-breaking spaces.
+- Polished `app/page.tsx` tokens, copy, and layout (removed raw shadows, colors).
+- Fixed footer hardcoded copyright to `2026` and updated `layout.tsx` login link.
+- Fixed `demo-cta.tsx` to use correct E.164 placeholder `33612345678` and removed `shadow-sm`.
+- Updated `video-placeholder.tsx` to remove focusable `role="button"` and `tabIndex` since it's a non-interactive mockup element.
+- Integrated `useReducedMotion` hook into `hero-3d.tsx` to prevent animation for users with accessibility preferences.
+- Fixed `demo-timeline-showcase.tsx` copy and design tokens.
+- Addressed accessibility and colors in `demo-inbox-showcase.tsx`.
+- Removed `hidden lg:block` from video placeholders in `demo/page.tsx` to make them stack properly on mobile.
+- Replaced 3rd party avatar API fetch in `demo-whatsapp-showcase.tsx` with inline initials.
+
+## Why & decisions
+These changes address the audit findings from `docs/reviews/s4-7-copy-polish.md` by prioritizing accessibility, consistent copy formatting, and using the `@zenvy/ui` design system. The fake interaction elements were either made non-interactive (`aria-hidden`) or properly labeled. `useReducedMotion` ensures the 3D canvas is static for users requiring reduced motion.
+
+## How to test
+- Build the landing app (`pnpm build --filter landing`) and verify there are no type errors or lint issues.
+- Start the landing app and navigate through `/`, `/demo`, `/tarifs`, `/mentions-legales`, `/confidentialite`.
+- Verify the video placeholders show up on mobile width on `/demo`.
+- Verify `useReducedMotion` statically renders the hero sphere (simulate using OS accessibility settings).
+
+## Verification done
+- Tested layout and responsiveness.
+- Confirmed accessibility patches.
+- Checked French copy.
+
+## Docs touched
+- None (app-level changes only).

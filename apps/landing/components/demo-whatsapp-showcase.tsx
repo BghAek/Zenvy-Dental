@@ -52,7 +52,7 @@ export function DemoWhatsappShowcase() {
       {/* Header */}
       <div className="bg-primary px-4 py-3 flex items-center gap-3 shrink-0">
         <div className="h-10 w-10 rounded-full bg-slate-300 flex items-center justify-center text-primary font-bold overflow-hidden">
-          <img src="https://ui-avatars.com/api/?name=Cabinet+Dentaire&background=e2e8f0&color=1e293b" alt="Cabinet" />
+          <span className="text-sm">CD</span>
         </div>
         <div className="flex flex-col">
           <span className="text-primary-foreground font-semibold text-sm">Cabinet Dentaire</span>

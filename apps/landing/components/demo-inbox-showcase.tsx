@@ -23,18 +23,18 @@ export function DemoInboxShowcase() {
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, margin: "-50px" }}
-      className="w-full max-w-2xl mx-auto bg-white border border-border rounded-xl shadow-md overflow-hidden"
+      className="w-full max-w-2xl mx-auto bg-card border border-border rounded-xl overflow-hidden"
     >
       {/* Dashboard Header Fake */}
-      <div className="bg-slate-50 border-b border-border px-4 py-3 flex items-center justify-between">
+      <div className="bg-muted border-b border-border px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-full bg-slate-200" />
+          <div className="h-8 w-8 rounded-full bg-muted-foreground/20" />
           <div className="space-y-1">
-            <div className="h-3 w-24 bg-slate-200 rounded-full" />
-            <div className="h-2 w-16 bg-slate-100 rounded-full" />
+            <div className="h-3 w-24 bg-muted-foreground/20 rounded-full" />
+            <div className="h-2 w-16 bg-muted-foreground/10 rounded-full" />
           </div>
         </div>
-        <div className="h-6 w-20 bg-emerald-100 text-emerald-700 text-[10px] font-bold uppercase flex items-center justify-center rounded-full">
+        <div className="h-6 w-20 bg-success/20 text-success text-[10px] font-bold uppercase flex items-center justify-center rounded-full">
           Géré par l'IA
         </div>
       </div>
@@ -45,16 +45,16 @@ export function DemoInboxShowcase() {
             <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
               <Bot className="h-4 w-4" />
             </div>
-            <div className="bg-slate-100 p-3 rounded-2xl rounded-tl-none text-sm text-foreground max-w-[80%]">
+            <div className="bg-muted p-3 rounded-2xl rounded-tl-none text-sm text-foreground max-w-[80%]">
               Je ne suis pas sûr de comprendre. Pouvez-vous m'en dire plus sur la douleur ?
             </div>
           </div>
           
           <div className="flex items-start gap-3 justify-end">
-            <div className="bg-blue-100 p-3 rounded-2xl rounded-tr-none text-sm text-foreground max-w-[80%]">
+            <div className="bg-info/20 p-3 rounded-2xl rounded-tr-none text-sm text-foreground max-w-[80%]">
               J'ai très mal depuis hier, je pense que c'est une urgence.
             </div>
-            <div className="h-8 w-8 rounded-full bg-blue-200 shrink-0" />
+            <div className="h-8 w-8 rounded-full bg-info/30 shrink-0" />
           </div>
         </div>
 
@@ -64,27 +64,27 @@ export function DemoInboxShowcase() {
           className="flex flex-col items-center justify-center py-4 space-y-3 relative"
         >
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-amber-200 to-transparent" />
+            <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-warning to-transparent" />
           </div>
-          <div className="bg-amber-50 text-amber-600 border border-amber-200 text-xs font-semibold px-4 py-1.5 rounded-full z-10 flex items-center gap-2 shadow-sm">
+          <div className="bg-warning/10 text-warning border border-warning/20 text-xs font-semibold px-4 py-1.5 rounded-full z-10 flex items-center gap-2">
             <span>IA</span>
             <ArrowRight className="h-3 w-3" />
             <span>Humain</span>
           </div>
-          <p className="text-xs text-muted-foreground z-10 bg-white px-2">
+          <p className="text-xs text-muted-foreground z-10 bg-card px-2">
             L'IA a détecté une urgence et a passé le relais à votre équipe.
           </p>
         </motion.div>
         
         {/* New Status */}
-        <div className="flex items-center justify-between bg-slate-50 border border-border p-3 rounded-lg">
+        <div className="flex items-center justify-between bg-muted border border-border p-3 rounded-lg">
           <div className="flex items-center gap-2 text-sm font-medium text-foreground">
             <User className="h-4 w-4 text-primary" />
-            Reprise manuelle par Dr. Martin
+            Reprise manuelle par Dr Martin
           </div>
-          <button className="text-xs bg-primary text-primary-foreground px-3 py-1.5 rounded-md hover:bg-primary/90 transition-colors">
+          <span className="text-xs bg-primary text-primary-foreground px-3 py-1.5 rounded-md transition-colors inline-block" aria-hidden="true">
             Répondre
-          </button>
+          </span>
         </div>
       </div>
     </motion.div>

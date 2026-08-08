@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function TarifsPage() {
   return (
-    <main className="flex min-h-[calc(100vh-140px)] flex-col items-center justify-center p-8 md:p-24 bg-slate-50">
+    <main className="flex min-h-[calc(100vh-140px)] flex-col items-center justify-center p-8 md:p-24 bg-muted">
       <div className="text-center mb-16 space-y-4 max-w-2xl mx-auto">
         <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl text-primary">
           Une tarification simple et transparente.
@@ -22,7 +22,7 @@ export default function TarifsPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl w-full">
         {/* Standard Plan (Anchor) */}
-        <div className="flex flex-col rounded-3xl border border-border bg-white p-8 shadow-sm">
+        <div className="flex flex-col rounded-3xl border border-border bg-card p-8">
           <div className="mb-6">
             <h3 className="text-2xl font-bold text-primary">Standard</h3>
             <p className="text-muted-foreground mt-2 text-sm">
@@ -30,8 +30,8 @@ export default function TarifsPage() {
             </p>
           </div>
           <div className="mb-6 flex items-baseline text-5xl font-extrabold text-primary">
-            20€
-            <span className="ml-1 text-xl font-medium text-muted-foreground">/mois</span>
+            20&#8239;€<span className="text-3xl ml-2">HT</span>
+            <span className="ml-2 text-xl font-medium text-muted-foreground">/mois</span>
           </div>
           <ul className="mb-8 flex flex-1 flex-col space-y-3">
             <li className="flex items-center space-x-3 text-sm text-muted-foreground">
@@ -43,14 +43,17 @@ export default function TarifsPage() {
               <span>Réception de messages simples</span>
             </li>
           </ul>
-          <button disabled className="inline-flex h-12 w-full items-center justify-center rounded-md bg-muted px-8 text-sm font-medium text-muted-foreground cursor-not-allowed">
-            Indisponible
-          </button>
+          <div className="flex flex-col space-y-2 text-center">
+            <span className="text-sm font-medium text-muted-foreground">Bientôt disponible</span>
+            <Link href="/demo" className="inline-flex h-12 w-full items-center justify-center rounded-md bg-secondary px-8 text-sm font-medium text-secondary-foreground transition-colors hover:bg-secondary/90">
+              Prévenez-moi
+            </Link>
+          </div>
         </div>
 
         {/* Premium Plan */}
-        <div className="relative flex flex-col rounded-3xl border-2 border-primary bg-primary p-8 shadow-lg">
-          <div className="absolute -top-4 right-8 rounded-full bg-accent px-4 py-1 text-xs font-semibold text-white tracking-wide uppercase shadow-sm">
+        <div className="relative flex flex-col rounded-3xl border-2 border-primary bg-primary p-8">
+          <div className="absolute -top-4 right-8 rounded-full bg-accent px-4 py-1 text-xs font-semibold text-accent-foreground tracking-wide uppercase">
             Populaire
           </div>
           <div className="mb-6">
@@ -59,9 +62,9 @@ export default function TarifsPage() {
               La solution complète avec assistant IA et rappels.
             </p>
           </div>
-          <div className="mb-6 flex items-baseline text-5xl font-extrabold text-white">
-            399€
-            <span className="ml-1 text-xl font-medium text-primary-foreground/80">/mois</span>
+          <div className="mb-6 flex items-baseline text-5xl font-extrabold text-primary-foreground">
+            399&#8239;€<span className="text-3xl ml-2">HT</span>
+            <span className="ml-2 text-xl font-medium text-primary-foreground/80">/mois</span>
           </div>
           <ul className="mb-8 flex flex-1 flex-col space-y-3 text-primary-foreground">
             <li className="flex items-center space-x-3 text-sm">
@@ -81,9 +84,9 @@ export default function TarifsPage() {
               <span>Support prioritaire</span>
             </li>
           </ul>
-          <Link href="/demo" className="inline-flex h-12 w-full items-center justify-center rounded-md bg-white px-8 text-sm font-bold text-primary shadow transition-colors hover:bg-white/90">
+          <a href={process.env.NEXT_PUBLIC_APP_URL ? `${process.env.NEXT_PUBLIC_APP_URL}/register` : 'https://app.zenvydental.fr/register'} className="inline-flex h-12 w-full items-center justify-center rounded-md bg-primary-foreground px-8 text-sm font-bold text-primary transition-colors hover:bg-primary-foreground/90">
             Commencer l'essai gratuit de 14 jours
-          </Link>
+          </a>
           <p className="mt-4 text-center text-xs text-primary-foreground/60">
             Aucune carte bancaire requise.
           </p>

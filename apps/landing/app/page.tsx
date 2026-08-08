@@ -17,13 +17,13 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row gap-4 pt-4">
             <Link 
               href="/demo" 
-              className="inline-flex h-12 items-center justify-center rounded-md bg-primary px-8 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90"
+              className="inline-flex h-12 items-center justify-center rounded-md bg-primary px-8 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
             >
               Réserver une démo
             </Link>
             <Link 
               href="/tarifs" 
-              className="inline-flex h-12 items-center justify-center rounded-md border border-input bg-background px-8 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground"
+              className="inline-flex h-12 items-center justify-center rounded-md border border-input bg-background px-8 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
             >
               Voir les tarifs
             </Link>
@@ -35,7 +35,7 @@ export default function Home() {
       </section>
 
       {/* Value Props Section */}
-      <section className="w-full bg-slate-50 py-24 border-t border-border/40">
+      <section className="w-full bg-muted py-24 border-t border-border/40">
         <div className="max-w-screen-xl mx-auto px-8">
           <div className="text-center mb-16 space-y-4">
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl text-primary">
@@ -47,7 +47,7 @@ export default function Home() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
             <div className="flex flex-col items-center text-center space-y-4">
-              <div className="h-14 w-14 rounded-2xl bg-white shadow-sm border border-border flex items-center justify-center text-primary">
+              <div className="h-14 w-14 rounded-2xl bg-card border border-border flex items-center justify-center text-primary">
                 <MessageSquare className="h-6 w-6" />
               </div>
               <h3 className="text-xl font-bold text-primary">Assistant WhatsApp 24/7</h3>
@@ -56,16 +56,16 @@ export default function Home() {
               </p>
             </div>
             <div className="flex flex-col items-center text-center space-y-4">
-              <div className="h-14 w-14 rounded-2xl bg-white shadow-sm border border-border flex items-center justify-center text-primary">
+              <div className="h-14 w-14 rounded-2xl bg-card border border-border flex items-center justify-center text-primary">
                 <CalendarCheck className="h-6 w-6" />
               </div>
-              <h3 className="text-xl font-bold text-primary">Rappels Automatisés</h3>
+              <h3 className="text-xl font-bold text-primary">Rappels automatisés</h3>
               <p className="text-muted-foreground text-balance">
-                Réduisez l'absentéisme de 40%. ZenvyDental envoie des rappels sur WhatsApp avec possibilité de reprogrammer ou d'annuler.
+                Réduisez les rendez-vous manqués. ZenvyDental envoie des rappels sur WhatsApp, avec confirmation ou annulation en un message.
               </p>
             </div>
             <div className="flex flex-col items-center text-center space-y-4">
-              <div className="h-14 w-14 rounded-2xl bg-white shadow-sm border border-border flex items-center justify-center text-primary">
+              <div className="h-14 w-14 rounded-2xl bg-card border border-border flex items-center justify-center text-primary">
                 <Zap className="h-6 w-6" />
               </div>
               <h3 className="text-xl font-bold text-primary">Mise en place immédiate</h3>

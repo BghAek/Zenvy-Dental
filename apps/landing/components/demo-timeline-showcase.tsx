@@ -24,30 +24,30 @@ export function DemoTimelineShowcase() {
   const events = [
     {
       id: 1,
-      title: "J-7 : Rappel Doux",
-      description: "WhatsApp envoyé pour rappeler le rendez-vous de la semaine prochaine.",
-      icon: <CalendarDays className="h-5 w-5 text-blue-500" />,
+      title: "J-1 : rappel",
+      description: "WhatsApp envoyé pour rappeler le rendez-vous de demain.",
+      icon: <CalendarDays className="h-5 w-5 text-info" />,
       time: "09:00",
     },
     {
       id: 2,
-      title: "J-2 : Demande de Confirmation",
-      description: "Le patient est invité à confirmer par un simple \"Oui\".",
-      icon: <Clock className="h-5 w-5 text-amber-500" />,
+      title: "J : rappel 2 h avant",
+      description: "Le patient est invité à confirmer par un simple « Oui ».",
+      icon: <Clock className="h-5 w-5 text-warning" />,
       time: "10:30",
     },
     {
       id: 3,
-      title: "J-1 : Confirmé",
-      description: "Le patient a confirmé. Le statut est mis à jour dans votre tableau de bord.",
-      icon: <CheckCircle2 className="h-5 w-5 text-green-500" />,
+      title: "J+1 : suivi",
+      description: "Message de suivi envoyé pour recueillir les avis et assurer un suivi post-soin.",
+      icon: <CheckCircle2 className="h-5 w-5 text-success" />,
       time: "14:15",
     },
   ];
 
   return (
-    <div className="w-full max-w-md mx-auto bg-white border border-border rounded-xl shadow-sm p-6">
-      <h3 className="text-lg font-semibold text-primary mb-6">Séquence de Rappels</h3>
+    <div className="w-full max-w-md mx-auto bg-card border border-border rounded-xl p-6">
+      <h3 className="text-lg font-semibold text-primary mb-6">Séquence de rappels</h3>
       <motion.div
         variants={shouldReduceMotion ? {} : containerVariants}
         initial="hidden"
@@ -61,7 +61,7 @@ export function DemoTimelineShowcase() {
             variants={shouldReduceMotion ? { hidden: { opacity: 1, x: 0 }, visible: { opacity: 1, x: 0 } } : itemVariants}
             className="relative pl-6"
           >
-            <div className="absolute -left-[13px] top-1 h-6 w-6 rounded-full bg-white border-2 border-muted flex items-center justify-center">
+            <div className="absolute -left-[13px] top-1 h-6 w-6 rounded-full bg-card border-2 border-muted flex items-center justify-center">
               {event.icon}
             </div>
             <div className="flex flex-col space-y-1">

@@ -25,12 +25,15 @@
 | Primary | `#1E293B` (Slate 800) | `bg-primary` / `text-primary` |
 | On Primary | `#FFFFFF` | `text-primary-foreground` |
 | Secondary | `#334155` (Slate 700) | `bg-secondary` |
-| Accent/CTA | `#DC2626` (Red 600) | `bg-accent` |
+| Accent | `#F1F5F9` (Slate 100) | `bg-accent` |
 | Background | `#F8FAFC` (Slate 50) | `bg-background` |
 | Foreground | `#0F172A` (Slate 900) | `text-foreground` |
 | Muted | `#E9EDF1` | `bg-muted` |
 | Border | `#E2E8F0` (Slate 200) | `border-border` |
 | Destructive | `#DC2626` (Red 600) | `bg-destructive` |
+| Success | `#16A34A` (Green 600) | `bg-success` |
+| Warning | `#EAB308` (Yellow 500) | `bg-warning` |
+| Info | `#3B82F6` (Blue 500) | `bg-info` |
 | Ring | `#1E293B` (Slate 800) | `ring-ring` |
 
 *Notes: The default dark mode should not be enabled by default. The design heavily relies on whitespace and the premium contrast of Slate 800 against Slate 50.*

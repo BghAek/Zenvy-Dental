@@ -7,7 +7,7 @@ import { VerifyEmailPage } from './pages/auth/VerifyEmailPage';
 import { ResetPasswordPage } from './pages/auth/ResetPasswordPage';
 import { DashboardLayout } from './components/layout/DashboardLayout';
 import { RequireAuth } from './components/auth/RequireAuth';
-import { EmptyState, Button } from '@zenvy/ui';
+import { EmptyState } from '@zenvy/ui';
 import { Settings } from 'lucide-react';
 import { PatientListPage } from './pages/patients/PatientListPage';
 import { PatientDetailPage } from './pages/patients/PatientDetailPage';
@@ -38,7 +38,6 @@ function PlaceholderPage({ title, description }: { title: string, description: s
         icon={Settings} 
         title={title} 
         description={description} 
-        action={<Button>Nouvelle action</Button>}
       />
     </div>
   );
@@ -63,7 +62,7 @@ export function App() {
             </Route>
 
             <Route element={<DashboardLayout />}>
-              <Route path="/" element={<PlaceholderPage title="Tableau de bord" description="Bienvenue sur votre espace ZenvyDental." />} />
+              <Route path="/" element={<PlaceholderPage title="Tableau de bord" description="Vos indicateurs arriveront prochainement." />} />
               <Route path="/inbox" element={<InboxPage />} />
               <Route path="/patients" element={<PatientListPage />} />
               <Route path="/patients/new" element={<PatientCreatePage />} />

@@ -13,7 +13,13 @@ import {
   Alert,
   AlertDescription,
   Spinner,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from '@zenvy/ui';
+import { Controller } from 'react-hook-form';
 import { useState } from 'react';
 
 const TIMEZONES = [
@@ -41,6 +47,7 @@ export function ProfileSettings() {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors, isDirty },
   } = useForm<ProfileFormValues>({
     defaultValues: {
@@ -120,18 +127,28 @@ export function ProfileSettings() {
 
             <div className="space-y-2">
               <Label htmlFor="timezone">Fuseau horaire</Label>
-              <select
-                id="timezone"
-                {...register('timezone')}
-                disabled={!isOwner || updateClinic.isPending}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {TIMEZONES.map((tz) => (
-                  <option key={tz.value} value={tz.value}>
-                    {tz.label}
-                  </option>
-                ))}
-              </select>
+              <Controller
+                name="timezone"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    disabled={!isOwner || updateClinic.isPending}
+                  >
+                    <SelectTrigger id="timezone">
+                      <SelectValue placeholder="Sélectionnez un fuseau horaire" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {TIMEZONES.map((tz) => (
+                        <SelectItem key={tz.value} value={tz.value}>
+                          {tz.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
               {errors.timezone && (
                 <p className="text-sm font-medium text-destructive">{errors.timezone.message}</p>
               )}
@@ -162,7 +179,7 @@ export function ProfileSettings() {
 
           {!isOwner && (
             <p className="text-xs text-muted-foreground mt-4 italic">
-              * Seul le propriétaire du cabinet (CLINIC_OWNER) est autorisé à modifier ces informations.
+              * Seul le propriétaire du cabinet est autorisé à modifier ces informations.
             </p>
           )}
         </form>

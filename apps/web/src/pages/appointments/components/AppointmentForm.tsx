@@ -1,7 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Button, Form, FormControl, FormField, FormItem, FormLabel, FormMessage, Input } from '@zenvy/ui';
-import { CreateAppointmentRequest, createAppointmentRequestSchema, APPOINTMENT_STATUSES } from '@zenvy/shared';
+import { Button, Form, FormControl, FormField, FormItem, FormLabel, FormMessage, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@zenvy/ui';
+import { CreateAppointmentRequest, createAppointmentRequestSchema, APPOINTMENT_STATUSES, APPOINTMENT_STATUS_LABELS } from '@zenvy/shared';
 import { z } from 'zod';
 import { usePatients } from '../../../lib/queries/patients';
 import { format } from 'date-fns';
@@ -57,18 +57,22 @@ export function AppointmentForm({ initialData, onSubmit, isLoading, isEdit = fal
           render={({ field }) => (
             <FormItem>
               <FormLabel>Patient</FormLabel>
-              <FormControl>
-                <select 
-                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                  {...field}
+                <Select 
+                  onValueChange={field.onChange} 
+                  defaultValue={field.value}
                   disabled={isEdit}
                 >
-                  <option value="">Sélectionnez un patient</option>
-                  {patients.map((p) => (
-                    <option key={p.id} value={p.id}>{p.firstName} {p.lastName}</option>
-                  ))}
-                </select>
-              </FormControl>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionnez un patient" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {patients.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>{p.firstName} {p.lastName}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               <FormMessage />
             </FormItem>
           )}
@@ -127,16 +131,21 @@ export function AppointmentForm({ initialData, onSubmit, isLoading, isEdit = fal
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Statut</FormLabel>
-                <FormControl>
-                  <select 
-                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                    {...field}
+                  <Select 
+                    onValueChange={field.onChange} 
+                    defaultValue={field.value}
                   >
-                    {APPOINTMENT_STATUSES.map((status) => (
-                      <option key={status} value={status}>{status}</option>
-                    ))}
-                  </select>
-                </FormControl>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Statut" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {APPOINTMENT_STATUSES.map((status) => (
+                        <SelectItem key={status} value={status}>{APPOINTMENT_STATUS_LABELS[status] || status}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 <FormMessage />
               </FormItem>
             )}

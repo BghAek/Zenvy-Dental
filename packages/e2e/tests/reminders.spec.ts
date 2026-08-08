@@ -15,7 +15,8 @@ test('booking an appointment schedules its 24h and 2h reminders', async ({ page 
   await login(page);
   await page.goto('/appointments/new');
 
-  await page.getByLabel('Patient').selectOption({ label: DEMO_PATIENT });
+  await page.getByLabel('Patient').click();
+  await page.getByRole('option', { name: DEMO_PATIENT }).click();
   await page.getByLabel('Date et heure').fill(inDays(3));
   await page.getByLabel("Type d'acte").fill('Détartrage E2E');
   await page.getByRole('button', { name: 'Enregistrer' }).click();

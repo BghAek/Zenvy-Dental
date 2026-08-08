@@ -7,7 +7,7 @@ import {
   Patient,
   ApiError,
 } from '@zenvy/shared';
-import { Button, Input, Label, Alert, AlertDescription, Spinner } from '@zenvy/ui';
+import { Button, Input, Alert, AlertDescription, Spinner, Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@zenvy/ui';
 import { useState } from 'react';
 
 type FormValues = z.input<typeof createPatientRequestSchema>;
@@ -32,12 +32,6 @@ export function PatientForm({ initialData, onSubmit, isLoading }: PatientFormPro
     },
   });
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = form;
-
   const handleFormSubmit = async (data: FormValues) => {
     setError(null);
     try {
@@ -52,78 +46,103 @@ export function PatientForm({ initialData, onSubmit, isLoading }: PatientFormPro
   };
 
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
-      {error && (
-        <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
+        {error && (
+          <Alert variant="destructive">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="firstName">Prénom</Label>
-          <Input id="firstName" {...register('firstName')} disabled={isLoading} />
-          {errors.firstName && (
-            <p className="text-sm font-medium text-destructive">{errors.firstName.message}</p>
-          )}
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+          <FormField
+            control={form.control}
+            name="firstName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Prénom</FormLabel>
+                <FormControl>
+                  <Input {...field} disabled={isLoading} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="lastName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Nom</FormLabel>
+                <FormControl>
+                  <Input {...field} disabled={isLoading} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="lastName">Nom</Label>
-          <Input id="lastName" {...register('lastName')} disabled={isLoading} />
-          {errors.lastName && (
-            <p className="text-sm font-medium text-destructive">{errors.lastName.message}</p>
+        <FormField
+          control={form.control}
+          name="phone"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Téléphone</FormLabel>
+              <FormControl>
+                <Input type="tel" placeholder="06 12 34 56 78" {...field} disabled={isLoading} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
           )}
+        />
+
+        <FormField
+          control={form.control}
+          name="tags"
+          render={({ field: { value, onChange, ...field } }) => (
+            <FormItem>
+              <FormLabel>Étiquettes (séparées par des virgules)</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="ex: Urgence, Nouveau"
+                  {...field}
+                  value={Array.isArray(value) ? value.join(', ') : value}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    const parsed = val.split(',').map((t) => t.trim()).filter(Boolean);
+                    onChange(parsed);
+                  }}
+                  disabled={isLoading}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="notes"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Notes</FormLabel>
+              <FormControl>
+                <Input {...field} value={field.value ?? ''} disabled={isLoading} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="flex justify-end gap-4">
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? <Spinner className="mr-2 h-4 w-4" /> : null}
+            {initialData ? 'Enregistrer les modifications' : 'Ajouter le patient'}
+          </Button>
         </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="phone">Téléphone</Label>
-        <Input
-          id="phone"
-          type="tel"
-          placeholder="06 12 34 56 78"
-          {...register('phone')}
-          disabled={isLoading}
-        />
-        {errors.phone && (
-          <p className="text-sm font-medium text-destructive">{errors.phone.message}</p>
-        )}
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="tags">Étiquettes (séparées par des virgules)</Label>
-        <Input
-          id="tags"
-          placeholder="ex: Urgence, Nouveau"
-          disabled={isLoading}
-          {...register('tags', {
-            setValueAs: (value: string) =>
-              value
-                .split(',')
-                .map((t) => t.trim())
-                .filter(Boolean),
-          })}
-        />
-        {errors.tags && (
-          <p className="text-sm font-medium text-destructive">{errors.tags.message}</p>
-        )}
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="notes">Notes</Label>
-        <Input id="notes" {...register('notes')} disabled={isLoading} />
-        {errors.notes && (
-          <p className="text-sm font-medium text-destructive">{errors.notes.message}</p>
-        )}
-      </div>
-
-      <div className="flex justify-end gap-4">
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? <Spinner className="mr-2 h-4 w-4" /> : null}
-          Enregistrer
-        </Button>
-      </div>
-    </form>
+      </form>
+    </Form>
   );
 }

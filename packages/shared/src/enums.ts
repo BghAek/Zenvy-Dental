@@ -13,6 +13,11 @@ export type ClinicOnboardingStatus = z.infer<typeof clinicOnboardingStatusSchema
 
 export const PATIENT_SOURCES = ['MANUAL', 'WHATSAPP_INBOUND'] as const;
 export const patientSourceSchema = z.enum(PATIENT_SOURCES);
+
+export const PATIENT_SOURCE_LABELS: Record<string, string> = {
+  MANUAL: 'Saisie manuelle',
+  WHATSAPP_INBOUND: 'WhatsApp',
+};
 export type PatientSource = z.infer<typeof patientSourceSchema>;
 
 export const APPOINTMENT_STATUSES = [
@@ -23,6 +28,14 @@ export const APPOINTMENT_STATUSES = [
   'DONE',
 ] as const;
 export const appointmentStatusSchema = z.enum(APPOINTMENT_STATUSES);
+
+export const APPOINTMENT_STATUS_LABELS: Record<string, string> = {
+  SCHEDULED: 'Planifié',
+  CONFIRMED: 'Confirmé',
+  CANCELLED: 'Annulé',
+  NO_SHOW: 'Non présenté',
+  DONE: 'Terminé',
+};
 export type AppointmentStatus = z.infer<typeof appointmentStatusSchema>;
 
 export const CONVERSATION_STATUSES = ['AI', 'HUMAN', 'CLOSED'] as const;

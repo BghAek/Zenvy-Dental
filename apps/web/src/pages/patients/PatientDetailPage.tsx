@@ -2,7 +2,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { usePatient, useDeletePatient } from '../../lib/queries/patients';
 import { Button, Badge, Spinner, Alert, AlertDescription, Card, CardHeader, CardTitle, CardContent } from '@zenvy/ui';
 import { ArrowLeft, Edit, Trash, Calendar } from 'lucide-react';
-import { ApiError } from '@zenvy/shared';
+import { ApiError, PATIENT_SOURCE_LABELS } from '@zenvy/shared';
 
 export function PatientDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -83,10 +83,10 @@ export function PatientDetailPage() {
           <CardContent className="space-y-4">
             <div>
               <p className="text-sm font-medium text-muted-foreground">Source</p>
-              <p>{patient.source === 'MANUAL' ? 'Manuel' : 'Système'}</p>
+              <p>{PATIENT_SOURCE_LABELS[patient.source] || patient.source}</p>
             </div>
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Opt-out (STOP WhatsApp)</p>
+              <p className="text-sm font-medium text-muted-foreground">Désabonnement WhatsApp</p>
               <p>{patient.optOut ? 'Oui' : 'Non'}</p>
             </div>
             <div>
@@ -127,7 +127,9 @@ export function PatientDetailPage() {
         <CardContent>
           <div className="flex flex-col items-center justify-center py-8 text-center">
             <Calendar className="mb-4 h-8 w-8 text-muted-foreground" />
-            <p className="text-muted-foreground">Les rendez-vous seront disponibles prochainement.</p>
+            <Link to="/appointments" className="text-primary hover:underline font-medium">
+              Voir les rendez-vous de ce patient
+            </Link>
           </div>
         </CardContent>
       </Card>

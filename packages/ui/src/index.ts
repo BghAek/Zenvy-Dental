@@ -9,3 +9,4 @@ export * from './components/spinner';
 export * from './utils';
 export * from './components/table';
 export * from './components/badge';
+export * from './components/select';

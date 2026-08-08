@@ -56,7 +56,9 @@ export function ThreadList({ activeId, onSelect }: ThreadListProps) {
           </div>
         ) : threads.length === 0 ? (
           <div className="p-4 text-center text-sm text-muted-foreground">
-            Aucune conversation trouvée.
+            {statusFilter === 'CLOSED'
+              ? "Aucune conversation archivée."
+              : "Aucune conversation pour l'instant. Elles apparaîtront ici dès qu'un patient vous écrira."}
           </div>
         ) : (
           <div className="flex flex-col">
@@ -77,9 +79,10 @@ export function ThreadList({ activeId, onSelect }: ThreadListProps) {
                   key={thread.id}
                   onClick={() => onSelect(thread.id)}
                   className={cn(
-                    'w-full text-left p-4 border-b border-border hover:bg-muted/50 transition-colors',
+                    'w-full text-left p-4 border-b border-border hover:bg-muted/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                     activeId === thread.id && 'bg-muted'
                   )}
+                  aria-current={activeId === thread.id ? 'true' : undefined}
                 >
                   <div className="flex items-start justify-between mb-1">
                     <div className="font-medium truncate pr-2 flex-1">

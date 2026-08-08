@@ -65,7 +65,7 @@ Status legend: each task gets `⬜ todo / 🟨 in PR / ✅ merged` — update th
 | S4-4 ✅ | Demo clinic seed: rich French data — patients, appointments, believable conversation histories | [C] Backend | S3 merged | One-command demo environment |
 | S4-5 ✅ | E2E: Playwright — signup→trial, inbox round-trip, reminder schedule, takeover | [C] QA | S3 merged | E2E in CI |
 | S4-6 🟨 | Production deploy: Contabo hardening, nginx TLS subdomains, deploy script, backup cron (pg_dump), UptimeRobot | [C] DevOps | S0-2 | zenvydental.fr live |
-| S4-7 | French copy QA + premium-polish pass on all three apps (with founder) | [A]+[C] | all UI merged | Zero English strings, zero dead ends |
+| S4-7 🟨 | French copy QA + premium-polish pass on all three apps (with founder) | [A]+[C] | all UI merged | Zero English strings, zero dead ends |
 | S4-8 | Full-platform review: /code-review + /security-review + /ponytail-audit | [C] all personas | everything | Findings triaged: fix now vs v2 |
 
 ## v2 backlog (designed, not scheduled)

@@ -151,7 +151,7 @@ function OnboardingDetailModal({ request, onClose }: { request: OpsOnboardingReq
           )}
           <div className="space-y-2">
             <Label htmlFor="status">Statut</Label>
-            <Select value={status} onValueChange={(val: any) => setStatus(val)}>
+            <Select value={status} onValueChange={(val: string) => setStatus(val as OpsOnboardingRequest['status'])}>
               <SelectTrigger id="status">
                 <SelectValue placeholder="Sélectionner le statut" />
               </SelectTrigger>

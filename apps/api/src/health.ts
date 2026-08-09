@@ -81,10 +81,18 @@ async function probeQueues(): Promise<number | null> {
 // Redis connections plus a DB query, so the report is memoized briefly: probe
 // cost is bounded by the TTL no matter how often the endpoint is hit.
 const CACHE_TTL_MS = 10_000;
-let cached: { report: HealthReport; at: number } | null = null;
+// Keyed by REDIS_URL: a config change (or a test repointing Redis) must probe
+// fresh rather than serve the previous target's report.
+let cached: { report: HealthReport; at: number; redisUrl: string | undefined } | null = null;
 
 export async function healthReport(): Promise<HealthReport> {
-  if (cached && Date.now() - cached.at < CACHE_TTL_MS) return cached.report;
+  if (
+    cached &&
+    cached.redisUrl === process.env.REDIS_URL &&
+    Date.now() - cached.at < CACHE_TTL_MS
+  ) {
+    return cached.report;
+  }
   const [db, queueDepth] = await Promise.all([
     withTimeout(probeDb(), false),
     withTimeout(probeQueues(), null),
@@ -97,6 +105,6 @@ export async function healthReport(): Promise<HealthReport> {
       queueDepth,
     },
   };
-  cached = { report, at: Date.now() };
+  cached = { report, at: Date.now(), redisUrl: process.env.REDIS_URL };
   return report;
 }

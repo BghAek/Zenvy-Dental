@@ -66,7 +66,7 @@ Status legend: each task gets `⬜ todo / 🟨 in PR / ✅ merged` — update th
 | S4-5 ✅ | E2E: Playwright — signup→trial, inbox round-trip, reminder schedule, takeover | [C] QA | S3 merged | E2E in CI |
 | S4-6 ✅ | Production deploy: Contabo hardening, nginx TLS subdomains, deploy script, backup cron (pg_dump), UptimeRobot | [C] DevOps | S0-2 | zenvydental.fr live |
 | S4-7 ✅ | French copy QA + premium-polish pass on all three apps (with founder) | [A]+[C] | all UI merged | Audit → `docs/reviews/s4-7-copy-polish.md`; fixes in PRs #46–#49 |
-| S4-8 | Full-platform review: /code-review + /security-review + /ponytail-audit | [C] all personas | everything | Findings triaged: fix now vs v2 |
+| S4-8 | Full-platform review: /code-review + /security-review + /ponytail-audit | [C] all personas | everything | `docs/reviews/s4-8-platform-review.md` — 14 findings fixed in the review PR, 4 launch blockers proposed as S5 tasks, rest triaged to v2 |
 
 ## v2 backlog (designed, not scheduled)
 

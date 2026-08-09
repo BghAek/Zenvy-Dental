@@ -30,7 +30,10 @@ find "$BACKUP_DIR" -name 'zenvy-*.sql.gz' -mtime "+$KEEP_DAYS" -delete
 
 # Optional heartbeat: an UptimeRobot "expected every 24h" monitor alerts when
 # this stops arriving — a backup nobody watches is not a backup.
-heartbeat=$(grep -E '^BACKUP_HEARTBEAT_URL=' .env | cut -d= -f2- || true)
+# Tolerates `export ` prefixes, CRLF endings, and quoted values — this line IS
+# the alerting for a silent backup failure, so its own parse must not be the
+# silent failure.
+heartbeat=$(sed -n 's/^\(export \)\{0,1\}BACKUP_HEARTBEAT_URL=//p' .env | tail -n1 | tr -d '\r' | sed -e 's/^["'\'']//' -e 's/["'\'']$//' || true)
 if [ -n "$heartbeat" ]; then
   curl -fsS --max-time 10 "$heartbeat" > /dev/null
 fi

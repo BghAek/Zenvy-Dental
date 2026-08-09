@@ -76,12 +76,20 @@ async function probeQueues(): Promise<number | null> {
   return depths.reduce<number>((total, depth) => total + (depth ?? 0), 0);
 }
 
+// /health is public and probed from several places (docker healthcheck every
+// 30s, UptimeRobot, anyone with curl). Each uncached probe opens two fresh
+// Redis connections plus a DB query, so the report is memoized briefly: probe
+// cost is bounded by the TTL no matter how often the endpoint is hit.
+const CACHE_TTL_MS = 10_000;
+let cached: { report: HealthReport; at: number } | null = null;
+
 export async function healthReport(): Promise<HealthReport> {
+  if (cached && Date.now() - cached.at < CACHE_TTL_MS) return cached.report;
   const [db, queueDepth] = await Promise.all([
     withTimeout(probeDb(), false),
     withTimeout(probeQueues(), null),
   ]);
-  return {
+  const report: HealthReport = {
     status: db && queueDepth !== null ? 'ok' : 'degraded',
     checks: {
       db: db ? 'ok' : 'down',
@@ -89,4 +97,6 @@ export async function healthReport(): Promise<HealthReport> {
       queueDepth,
     },
   };
+  cached = { report, at: Date.now() };
+  return report;
 }

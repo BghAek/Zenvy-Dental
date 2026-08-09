@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/api';
-import { supportThreadListResponseSchema, supportThreadSchema, supportMessageSchema } from '@zenvy/shared/src/ops';
+import { SUPPORT_THREAD_STATUS_LABELS, supportThreadListResponseSchema, supportThreadSchema, supportMessageSchema } from '@zenvy/shared';
 import { EmptyState, Badge, Button, Input, cn } from '@zenvy/ui';
 import { useState, useRef, useEffect } from 'react';
 import { format } from 'date-fns';
@@ -12,7 +12,11 @@ export function SupportThreadsPage() {
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['ops-support-threads'],
-    queryFn: () => api.get('/ops/support-threads', supportThreadListResponseSchema),
+    // ponytail: first page at the API max (100), no cursor UI — add load-more
+    // when a list actually crosses 100 rows.
+    queryFn: () => api.get('/ops/support-threads', supportThreadListResponseSchema, { limit: 100 }),
+    // Same cadence as the web inbox: clinic replies show up without a reload.
+    refetchInterval: 5000,
   });
 
   return (
@@ -57,7 +61,7 @@ export function SupportThreadsPage() {
                       {thread.clinic.name}
                     </span>
                     <Badge variant={thread.status === 'OPEN' ? 'default' : 'secondary'} className="text-[10px] px-1.5 py-0">
-                      {thread.status}
+                      {SUPPORT_THREAD_STATUS_LABELS[thread.status] || thread.status}
                     </Badge>
                   </div>
                   <div className="text-xs font-medium text-muted-foreground truncate mb-1">
@@ -97,6 +101,7 @@ function SupportThreadDetail({ threadId }: { threadId: string }) {
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['ops-support-thread', threadId],
     queryFn: () => api.get(`/ops/support-threads/${threadId}`, supportThreadSchema),
+    refetchInterval: 5000,
   });
 
   const replyMutation = useMutation({

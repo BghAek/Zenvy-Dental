@@ -13,7 +13,6 @@
     "@zenvy/shared": "workspace:*",
     "@zenvy/ui": "workspace:*",
     "date-fns": "^4.4.0",
-    "framer-motion": "^11.3.19",
     "lucide-react": "^0.412.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",

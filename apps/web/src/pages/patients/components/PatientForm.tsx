@@ -108,10 +108,11 @@ export function PatientForm({ initialData, onSubmit, isLoading }: PatientFormPro
                 <Input
                   placeholder="ex: Urgence, Nouveau"
                   {...field}
-                  value={Array.isArray(value) ? value.join(', ') : value}
+                  // Uncontrolled on purpose: rendering the parsed array back
+                  // into the input deletes the separator the user just typed.
+                  defaultValue={Array.isArray(value) ? value.join(', ') : (value ?? '')}
                   onChange={(e) => {
-                    const val = e.target.value;
-                    const parsed = val.split(',').map((t) => t.trim()).filter(Boolean);
+                    const parsed = e.target.value.split(',').map((t) => t.trim()).filter(Boolean);
                     onChange(parsed);
                   }}
                   disabled={isLoading}

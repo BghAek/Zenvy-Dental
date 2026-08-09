@@ -14,3 +14,5 @@ next-env.d.ts
 .env.*
 !.env.example
 .DS_Store
+pr*body*.txt
+pr.txt

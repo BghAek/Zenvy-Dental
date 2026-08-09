@@ -1,5 +1,5 @@
 import { Logger } from '@nestjs/common';
-import { clinicPaysForService } from '../billing/subscription.guard';
+import { isSubscriptionUsable } from '../billing/subscription.guard';
 import type { ScheduledMessageKind } from '../generated/prisma/enums';
 import { basePrisma, prisma } from '../prisma/client';
 import { runAsClinic } from '../tenancy/tenant-context';
@@ -46,7 +46,7 @@ async function send(id: string): Promise<void> {
   // Scoped read: an id from another clinic simply does not resolve here.
   const row = await prisma.scheduledMessage.findFirst({
     where: { id },
-    include: { patient: true, appointment: true, clinic: true },
+    include: { patient: true, appointment: true, clinic: { include: { subscription: true } } },
   });
   // Re-checked, never assumed: the row may have been re-timed, cancelled or
   // already sent between the sweep and this job (a retry replays it too).
@@ -64,7 +64,7 @@ async function send(id: string): Promise<void> {
   // template send, so a clinic whose subscription is over stops sending. FAILED
   // rather than skipped: a row left PENDING would be re-swept every minute and
   // would crowd real sends out of the batch.
-  if (!(await clinicPaysForService(row.clinicId))) {
+  if (!isSubscriptionUsable(row.clinic.subscription)) {
     await fail(row.clinicId, id, 'Clinic subscription is not usable: scheduled message not sent');
     return;
   }

@@ -1,6 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { SampleDesignPage } from './SampleDesignPage';
 import { RegisterPage } from './pages/auth/RegisterPage';
 import { LoginPage } from './pages/auth/LoginPage';
 import { VerifyEmailPage } from './pages/auth/VerifyEmailPage';
@@ -52,7 +51,6 @@ export function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/verify-email" element={<VerifyEmailPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
-          <Route path="/sample" element={<SampleDesignPage />} />
           
           <Route element={<RequireAuth />}>
             <Route path="/onboarding" element={<OnboardingLayout />}>

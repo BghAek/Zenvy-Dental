@@ -211,41 +211,17 @@ const newPromise = (callback: (resolve: (value: any) => void) => void) => {
 };
 
 // 6. Billing Checkout Mutation
+// No mock fallback: a failed checkout-session call must surface as an error,
+// never as a fake redirect that hides a real billing problem.
 export function useBillingCheckout() {
   return useMutation({
-    mutationFn: async () => {
-      try {
-        // Try calling the real backend POST /billing/checkout-session
-        const res = await api.post('/billing/checkout-session', billingSessionResponseSchema);
-        return res;
-      } catch (err) {
-        console.warn('Real Stripe checkout failed, falling back to mock.', err);
-        // Fallback to simulating a Stripe redirection by returning a mock URL
-        // that will flag the checkout success after redirect
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        return {
-          url: `${window.location.origin}/settings/subscription?checkout=success`,
-        };
-      }
-    },
+    mutationFn: () => api.post('/billing/checkout-session', billingSessionResponseSchema),
   });
 }
 
 // 7. Billing Portal Mutation
 export function useBillingPortal() {
   return useMutation({
-    mutationFn: async () => {
-      try {
-        // Try calling the real backend POST /billing/portal-session
-        const res = await api.post('/billing/portal-session', billingSessionResponseSchema);
-        return res;
-      } catch (err) {
-        console.warn('Real Stripe billing portal failed, falling back to mock.', err);
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        return {
-          url: `https://billing.stripe.com/p/session/mock_${Math.random().toString(36).substr(2, 9)}`,
-        };
-      }
-    },
+    mutationFn: () => api.post('/billing/portal-session', billingSessionResponseSchema),
   });
 }

@@ -141,15 +141,23 @@ export class StripeWebhookController {
     // status write is refused when a strictly newer one already landed —
     // otherwise a late `updated(active)` after `deleted` un-cancels a clinic
     // for good, and no further event would ever correct it (S3-7). Strictly
-    // older only: same-second events keep arrival order, as before.
-    if (eventAt && target.statusEventAt && eventAt < target.statusEventAt) {
-      this.logger.warn(`Stripe event older than the applied state: ignored for ${target.clinicId}`);
-      return;
-    }
+    // older only: same-second events keep arrival order, as before. The stamp
+    // comparison rides in the WHERE (not a prior read) so two concurrent
+    // deliveries cannot both pass it — the stale one matches zero rows.
     // The await must happen INSIDE the context: a PrismaPromise runs the
     // tenant extension when it is awaited, not when it is built.
     await runAsClinic(target.clinicId, async () => {
-      await prisma.subscription.update({ where: { clinicId: target.clinicId }, data });
+      const { count } = await prisma.subscription.updateMany({
+        where: {
+          clinicId: target.clinicId,
+          ...(eventAt ? { OR: [{ statusEventAt: null }, { statusEventAt: { lte: eventAt } }] } : {}),
+        },
+        data,
+      });
+      if (count === 0) {
+        this.logger.warn(`Stripe event older than the applied state: ignored for ${target.clinicId}`);
+        return;
+      }
       // Billing changes are audited (docs/04-security.md §Audit). No actor:
       // Stripe made this change, no user did.
       if (data.status && data.status !== target.status) {

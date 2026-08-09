@@ -1,5 +1,5 @@
 import { Logger } from '@nestjs/common';
-import { clinicPaysForService } from '../billing/subscription.guard';
+import { isSubscriptionUsable } from '../billing/subscription.guard';
 import { basePrisma, prisma } from '../prisma/client';
 import { getTenantContext } from '../tenancy/tenant-context';
 import { sendText } from '../whatsapp/graph';
@@ -104,7 +104,7 @@ export async function replyToInbound(conversationId: string): Promise<void> {
 async function run(conversationId: string): Promise<void> {
   const conversation = await prisma.conversation.findFirst({
     where: { id: conversationId },
-    include: { patient: true, clinic: true },
+    include: { patient: true, clinic: { include: { subscription: true } } },
   });
   // Staff may have taken over between the webhook and this call.
   if (!conversation || conversation.status !== 'AI') return;
@@ -134,7 +134,7 @@ async function run(conversationId: string): Promise<void> {
   // subscription is over gets no assistant at all — emergency path included,
   // because we do not speak on behalf of a cabinet that is no longer a client.
   // The message is already stored; a human owns the thread from here.
-  if (!(await clinicPaysForService(conversation.clinicId))) {
+  if (!isSubscriptionUsable(conversation.clinic.subscription)) {
     await warn(conversationId, 'Clinic subscription is not usable: no AI reply sent');
     await prisma.conversation.update({
       where: { id: conversationId },

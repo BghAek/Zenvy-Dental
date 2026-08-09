@@ -10,5 +10,5 @@ export * from './utils';
 export * from './components/table';
 export * from './components/badge';
 export * from './components/select';
-export * from './components/confirm-dialog';
+
 export * from './components/dialog';

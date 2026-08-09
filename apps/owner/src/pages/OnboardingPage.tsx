@@ -1,25 +1,21 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/api';
-import { opsOnboardingRequestListResponseSchema, OpsOnboardingRequest, UpdateOpsOnboardingRequest, opsOnboardingRequestSchema } from '@zenvy/shared/src/ops';
+import { ONBOARDING_REQUEST_STATUS_LABELS, opsOnboardingRequestListResponseSchema, OpsOnboardingRequest, UpdateOpsOnboardingRequest, opsOnboardingRequestSchema } from '@zenvy/shared';
 import { EmptyState, Table, TableHeader, TableRow, TableHead, TableBody, TableCell, Badge, Button, Input, Label, Dialog, DialogContent, DialogHeader, DialogTitle, Select, SelectTrigger, SelectValue, SelectContent, SelectItem, Alert, AlertDescription } from '@zenvy/ui';
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { AlertCircle, Users } from 'lucide-react';
 
-const STATUS_LABELS: Record<string, string> = {
-  PENDING: 'En attente',
-  CALL_SCHEDULED: 'Appel programmé',
-  DONE: 'Terminé',
-  CANCELLED: 'Annulé',
-};
-
 export function OnboardingPage() {
   const [selectedRequest, setSelectedRequest] = useState<OpsOnboardingRequest | null>(null);
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['ops-onboarding'],
-    queryFn: () => api.get('/ops/onboarding-requests', opsOnboardingRequestListResponseSchema),
+    // ponytail: first page at the API max (100), no cursor UI — add load-more
+    // when a list actually crosses 100 rows.
+    queryFn: () =>
+      api.get('/ops/onboarding-requests', opsOnboardingRequestListResponseSchema, { limit: 100 }),
   });
 
   return (
@@ -63,7 +59,7 @@ export function OnboardingPage() {
                   </TableCell>
                   <TableCell>
                     <Badge variant={req.status === 'PENDING' ? 'default' : req.status === 'DONE' ? 'secondary' : 'outline'}>
-                      {STATUS_LABELS[req.status] || req.status}
+                      {ONBOARDING_REQUEST_STATUS_LABELS[req.status] || req.status}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
@@ -95,9 +91,8 @@ export function OnboardingPage() {
 }
 
 function formatForDatetimeLocal(dateStr: string) {
-  const d = new Date(dateStr);
-  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-  return d.toISOString().slice(0, 16);
+  // Same idiom as apps/web's AppointmentForm datetime-local prefill.
+  return format(new Date(dateStr), "yyyy-MM-dd'T'HH:mm");
 }
 
 function OnboardingDetailModal({ request, onClose }: { request: OpsOnboardingRequest; onClose: () => void }) {

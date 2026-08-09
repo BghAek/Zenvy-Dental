@@ -11,6 +11,12 @@ export const CLINIC_ONBOARDING_STATUSES = ['PENDING', 'IN_PROGRESS', 'COMPLETED'
 export const clinicOnboardingStatusSchema = z.enum(CLINIC_ONBOARDING_STATUSES);
 export type ClinicOnboardingStatus = z.infer<typeof clinicOnboardingStatusSchema>;
 
+export const CLINIC_ONBOARDING_STATUS_LABELS: Record<string, string> = {
+  PENDING: 'En attente',
+  IN_PROGRESS: 'En cours',
+  COMPLETED: 'Terminée',
+};
+
 export const PATIENT_SOURCES = ['MANUAL', 'WHATSAPP_INBOUND'] as const;
 export const patientSourceSchema = z.enum(PATIENT_SOURCES);
 
@@ -64,9 +70,20 @@ export const PLANS = ['PREMIUM'] as const;
 export const planSchema = z.enum(PLANS);
 export type Plan = z.infer<typeof planSchema>;
 
+export const PLAN_LABELS: Record<string, string> = {
+  PREMIUM: 'Premium',
+};
+
 export const SUBSCRIPTION_STATUSES = ['TRIALING', 'ACTIVE', 'PAST_DUE', 'CANCELED'] as const;
 export const subscriptionStatusSchema = z.enum(SUBSCRIPTION_STATUSES);
 export type SubscriptionStatus = z.infer<typeof subscriptionStatusSchema>;
+
+export const SUBSCRIPTION_STATUS_LABELS: Record<string, string> = {
+  TRIALING: 'Essai',
+  ACTIVE: 'Actif',
+  PAST_DUE: 'Paiement en retard',
+  CANCELED: 'Annulé',
+};
 
 export const SCHEDULED_MESSAGE_KINDS = [
   'REMINDER_24H',
@@ -90,10 +107,29 @@ export const ONBOARDING_REQUEST_STATUSES = [
 export const onboardingRequestStatusSchema = z.enum(ONBOARDING_REQUEST_STATUSES);
 export type OnboardingRequestStatus = z.infer<typeof onboardingRequestStatusSchema>;
 
+export const ONBOARDING_REQUEST_STATUS_LABELS: Record<string, string> = {
+  PENDING: 'En attente',
+  CALL_SCHEDULED: 'Appel programmé',
+  DONE: 'Terminé',
+  CANCELLED: 'Annulé',
+};
+
 export const SUPPORT_THREAD_STATUSES = ['OPEN', 'CLOSED'] as const;
 export const supportThreadStatusSchema = z.enum(SUPPORT_THREAD_STATUSES);
 export type SupportThreadStatus = z.infer<typeof supportThreadStatusSchema>;
 
+export const SUPPORT_THREAD_STATUS_LABELS: Record<string, string> = {
+  OPEN: 'Ouvert',
+  CLOSED: 'Fermé',
+};
+
 export const ERROR_SEVERITIES = ['INFO', 'WARN', 'ERROR', 'FATAL'] as const;
 export const errorSeveritySchema = z.enum(ERROR_SEVERITIES);
 export type ErrorSeverity = z.infer<typeof errorSeveritySchema>;
+
+export const ERROR_SEVERITY_LABELS: Record<string, string> = {
+  INFO: 'Info',
+  WARN: 'Avertissement',
+  ERROR: 'Erreur',
+  FATAL: 'Critique',
+};

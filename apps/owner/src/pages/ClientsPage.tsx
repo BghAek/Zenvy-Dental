@@ -1,16 +1,29 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../lib/api';
-import { opsClientListResponseSchema } from '@zenvy/shared/src/ops';
+import {
+  CLINIC_ONBOARDING_STATUS_LABELS,
+  PLAN_LABELS,
+  SUBSCRIPTION_STATUS_LABELS,
+  opsClientListResponseSchema,
+} from '@zenvy/shared';
 import { EmptyState, Table, TableHeader, TableRow, TableHead, TableBody, TableCell, Badge, Input } from '@zenvy/ui';
 import { Search, AlertCircle, Users } from 'lucide-react';
 import { useState } from 'react';
+import { useDebouncedValue } from '../lib/useDebouncedValue';
 
 export function ClientsPage() {
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebouncedValue(search);
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ['ops-clients', search],
-    queryFn: () => api.get('/ops/clients', opsClientListResponseSchema, { search: search || undefined }),
+    queryKey: ['ops-clients', debouncedSearch],
+    // ponytail: first page at the API max (100), no cursor UI — add load-more
+    // when a list actually crosses 100 rows.
+    queryFn: () =>
+      api.get('/ops/clients', opsClientListResponseSchema, {
+        search: debouncedSearch || undefined,
+        limit: 100,
+      }),
   });
 
   return (
@@ -59,13 +72,19 @@ export function ClientsPage() {
                   </TableCell>
                   <TableCell>{client.phone || '-'}</TableCell>
                   <TableCell>
-                    <Badge variant="outline">{client.onboardingStatus}</Badge>
+                    <Badge variant="outline">
+                      {CLINIC_ONBOARDING_STATUS_LABELS[client.onboardingStatus] || client.onboardingStatus}
+                    </Badge>
                   </TableCell>
                   <TableCell>
                     {client.subscription ? (
                       <div className="flex flex-col gap-1">
-                        <Badge>{client.subscription.status}</Badge>
-                        <span className="text-xs text-muted-foreground">{client.subscription.plan}</span>
+                        <Badge>
+                          {SUBSCRIPTION_STATUS_LABELS[client.subscription.status] || client.subscription.status}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">
+                          {PLAN_LABELS[client.subscription.plan] || client.subscription.plan}
+                        </span>
                       </div>
                     ) : (
                       <span className="text-muted-foreground">-</span>

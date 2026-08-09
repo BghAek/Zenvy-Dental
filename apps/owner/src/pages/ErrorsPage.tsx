@@ -1,27 +1,27 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../lib/api';
-import { opsErrorListResponseSchema, opsErrorSchema } from '@zenvy/shared/src/ops';
+import { ERROR_SEVERITY_LABELS, opsErrorListResponseSchema, opsErrorSchema } from '@zenvy/shared';
 import { EmptyState, Table, TableHeader, TableRow, TableHead, TableBody, TableCell, Badge, Input, Button, Dialog, DialogContent, DialogHeader, DialogTitle, Spinner } from '@zenvy/ui';
 import { Search, AlertCircle, AlertTriangle } from 'lucide-react';
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-
-
-const SEVERITY_LABELS: Record<string, string> = {
-  INFO: 'Info',
-  WARN: 'Avertissement',
-  ERROR: 'Erreur',
-  FATAL: 'Critique',
-};
+import { useDebouncedValue } from '../lib/useDebouncedValue';
 
 export function ErrorsPage() {
   const [correlationId, setCorrelationId] = useState('');
   const [selectedErrorId, setSelectedErrorId] = useState<string | null>(null);
+  const debouncedCorrelationId = useDebouncedValue(correlationId);
 
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ['ops-errors', correlationId],
-    queryFn: () => api.get('/ops/errors', opsErrorListResponseSchema, { correlationId: correlationId || undefined }),
+    queryKey: ['ops-errors', debouncedCorrelationId],
+    // ponytail: first page at the API max (100), no cursor UI — add load-more
+    // when a list actually crosses 100 rows.
+    queryFn: () =>
+      api.get('/ops/errors', opsErrorListResponseSchema, {
+        correlationId: debouncedCorrelationId || undefined,
+        limit: 100,
+      }),
   });
 
   return (
@@ -93,7 +93,7 @@ export function ErrorsPage() {
                   </TableCell>
                   <TableCell>
                     <Badge variant={error.severity === 'FATAL' || error.severity === 'ERROR' ? 'destructive' : 'secondary'}>
-                      {SEVERITY_LABELS[error.severity] || error.severity}
+                      {ERROR_SEVERITY_LABELS[error.severity] || error.severity}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-sm font-medium">{error.module}</TableCell>

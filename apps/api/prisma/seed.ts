@@ -92,75 +92,79 @@ const frTime = (d: Date): string =>
  *  have to stay distinct — `seedDemoClinic` asserts it rather than trusting it. */
 type PatientSpec = Omit<Prisma.PatientCreateManyInput, 'clinicId'>;
 
+// Every patient mobile lives in 06 39 98 XX XX — the ARCEP range reserved for
+// fiction, never allocated to a real subscriber. The seed leaves future
+// reminders PENDING for the live outbound sweep, so on a seeded box with a real
+// META_ACCESS_TOKEN those sends must not be able to reach a real person.
 const PATIENTS: PatientSpec[] = [
   {
     firstName: 'Marie',
     lastName: 'Dubois',
-    phone: '+33612345678',
+    phone: '+33639980001',
     tags: ['fidèle'],
     notes: 'Anxieuse — prévoir un temps d’explication avant les soins.',
   },
-  { firstName: 'Lucas', lastName: 'Martin', phone: '+33698765432' },
+  { firstName: 'Lucas', lastName: 'Martin', phone: '+33639980002' },
   {
     firstName: 'Sophie',
     lastName: 'Bernard',
-    phone: '+33655443322',
+    phone: '+33639980003',
     tags: ['nouveau patient'],
     source: 'WHATSAPP_INBOUND',
   },
   {
     firstName: 'Thomas',
     lastName: 'Girard',
-    phone: '+33607112233',
+    phone: '+33639980004',
     tags: ['urgence'],
   },
-  { firstName: 'Nadia', lastName: 'Cherif', phone: '+33781554466' },
+  { firstName: 'Nadia', lastName: 'Cherif', phone: '+33639980005' },
   {
     firstName: 'Jean-Pierre',
     lastName: 'Roussel',
-    phone: '+33623889977',
+    phone: '+33639980006',
     tags: ['suivi post-opératoire'],
     notes: 'Extraction des dents de sagesse — contrôle de cicatrisation à prévoir.',
   },
   {
     firstName: 'Camille',
     lastName: 'Petit',
-    phone: '+33766221100',
+    phone: '+33639980007',
     optOut: true,
     notes: 'A répondu STOP — aucun message automatique ne part vers ce numéro.',
   },
   {
     firstName: 'Élodie',
     lastName: 'Moreau',
-    phone: '+33645332211',
+    phone: '+33639980008',
     tags: ['fidèle', 'famille'],
   },
   {
     firstName: 'Karim',
     lastName: 'Benali',
-    phone: '+33750998877',
+    phone: '+33639980009',
     tags: ['nouveau patient'],
     source: 'WHATSAPP_INBOUND',
   },
-  { firstName: 'Chloé', lastName: 'Lefèvre', phone: '+33688774411' },
+  { firstName: 'Chloé', lastName: 'Lefèvre', phone: '+33639980010' },
   {
     firstName: 'Antoine',
     lastName: 'Mercier',
-    phone: '+33611223344',
+    phone: '+33639980011',
     tags: ['enfant'],
     notes: 'Accompagné par sa mère, Mme Mercier.',
   },
-  { firstName: 'Fatima', lastName: 'Haddad', phone: '+33734556677' },
+  { firstName: 'Fatima', lastName: 'Haddad', phone: '+33639980012' },
   {
     firstName: 'Pierre',
     lastName: 'Lambert',
-    phone: '+33699001122',
+    phone: '+33639980013',
     tags: ['implants'],
   },
   {
     firstName: 'Julie',
     lastName: 'Rossi',
-    phone: '+33677889900',
+    phone: '+33639980014',
     // Soft-deleted: still holds its (clinicId, phone) slot, hidden from lists.
     deletedAt: ago(30 * DAY),
   },
@@ -771,7 +775,7 @@ async function seedDemoClinic(): Promise<{ clinicId: string; ownerId: string }> 
     {
       // No patient row behind it: a number that wrote in and never booked.
       patient: null,
-      phone: '+33627448811',
+      phone: '+33639980015',
       status: 'AI',
       messages: [
         {
@@ -998,7 +1002,7 @@ async function seedOtherClinics(): Promise<Record<string, ClinicRef>> {
           clinicId: clinic.id,
           firstName,
           lastName,
-          phone: `+337${10_000_000 + nameCursor++}`,
+          phone: `+336399${81_000 + nameCursor++}`,
           createdAt,
         };
       }),
@@ -1073,7 +1077,7 @@ async function seedOpsTrail(
       module: 'conversations',
       severity: 'ERROR',
       message: 'Outbound send failed after 3 retries',
-      context: { waContactPhone: '+33688774411', lastStatus: 'FAILED' },
+      context: { waContactPhone: '+33639980010', lastStatus: 'FAILED' },
       createdAt: ago(2 * DAY),
     },
     {

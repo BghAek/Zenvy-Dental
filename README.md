@@ -1,6 +1,6 @@
 # ZenvyDental
 
-Patient-communication platform for French dental clinics: premium dashboard + AI-powered WhatsApp assistant (reminders, follow-ups, lead capture) in French. B2B SaaS — Premium €399/mo, 14-day trial.
+Patient-communication platform for French dental clinics: premium dashboard + AI-powered WhatsApp assistant (reminders, follow-ups, lead capture) in French. B2B SaaS .
 
 ## Documentation — start here
 
